@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew:*)",
+      "Bash(adb:*)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb devices)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
