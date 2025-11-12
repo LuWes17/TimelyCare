@@ -11,11 +11,16 @@ import com.example.timelycare.ui.components.TimelyCareBottomNavigation
 import com.example.timelycare.ui.components.TimelyCareTopBar
 import com.example.timelycare.ui.components.AddMedicineHeader
 import com.example.timelycare.ui.components.MedicationsHeader
+import com.example.timelycare.ui.components.CalendarHeader
+import com.example.timelycare.ui.components.ContactsHeader
 import com.example.timelycare.ui.screens.dashboard.DashboardScreen
 import com.example.timelycare.ui.screens.medications.MedicationsScreen
 import com.example.timelycare.ui.screens.medications.AddEditMedicationScreen
 import com.example.timelycare.ui.screens.calendar.CalendarScreen
 import com.example.timelycare.ui.screens.contacts.ContactsScreen
+import com.example.timelycare.ui.screens.heartrate.HeartRateScreen
+import com.example.timelycare.ui.screens.bloodpressure.BloodPressureScreen
+import com.example.timelycare.ui.screens.glucose.GlucoseScreen
 import com.example.timelycare.data.Medication
 
 @Composable
@@ -23,6 +28,9 @@ fun TimelyCareApp() {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var showAddMedicine by remember { mutableStateOf(false) }
     var editingMedication by remember { mutableStateOf<Medication?>(null) }
+    var showHeartRateScreen by remember { mutableStateOf(false) }
+    var showBloodPressureScreen by remember { mutableStateOf(false) }
+    var showGlucoseScreen by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -34,12 +42,17 @@ fun TimelyCareApp() {
                         editingMedication = null
                     }
                 )
+                showHeartRateScreen -> null // Heart rate screen has its own header
+                showBloodPressureScreen -> null // Blood pressure screen has its own header
+                showGlucoseScreen -> null // Glucose screen has its own header
                 selectedTabIndex == 1 -> MedicationsHeader(onAddClick = { showAddMedicine = true })
+                selectedTabIndex == 2 -> CalendarHeader()
+                selectedTabIndex == 3 -> ContactsHeader()
                 else -> TimelyCareTopBar()
             }
         },
         bottomBar = {
-            if (!showAddMedicine) {
+            if (!showAddMedicine && !showHeartRateScreen && !showBloodPressureScreen && !showGlucoseScreen) {
                 TimelyCareBottomNavigation(
                     selectedIndex = selectedTabIndex,
                     onTabSelected = { selectedTabIndex = it }
@@ -61,7 +74,24 @@ fun TimelyCareApp() {
                         editingMedication = null
                     }
                 )
-                selectedTabIndex == 0 -> DashboardScreen()
+                showHeartRateScreen -> HeartRateScreen(
+                    onBackClick = { showHeartRateScreen = false }
+                )
+                showBloodPressureScreen -> BloodPressureScreen(
+                    onBackClick = { showBloodPressureScreen = false }
+                )
+                showGlucoseScreen -> GlucoseScreen(
+                    onBackClick = { showGlucoseScreen = false }
+                )
+                selectedTabIndex == 0 -> DashboardScreen(
+                    onHealthMetricClick = { metricId ->
+                        when (metricId) {
+                            "heart_rate" -> showHeartRateScreen = true
+                            "blood_pressure" -> showBloodPressureScreen = true
+                            "glucose" -> showGlucoseScreen = true
+                        }
+                    }
+                )
                 selectedTabIndex == 1 -> MedicationsScreen(
                     onAddClick = { showAddMedicine = true },
                     onEditClick = { medication ->

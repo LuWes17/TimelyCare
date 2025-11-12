@@ -3,6 +3,8 @@ package com.example.timelycare.ui.screens.dashboard
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,40 +18,55 @@ import com.example.timelycare.ui.theme.TimelyCareTextPrimary
 import com.example.timelycare.ui.theme.TimelyCareTextSecondary
 
 @Composable
-fun DashboardScreen() {
-    val repository = remember { MedicationRepository.getInstance() }
-    val medications by repository.medications.collectAsStateWithLifecycle()
+fun DashboardScreen(
+    onHealthMetricClick: (String) -> Unit = {}
+) {
+    val medicationRepository = remember { MedicationRepository.getInstance() }
+    val medications by medicationRepository.medications.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        Text(
-            text = "Today's Schedule",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = TimelyCareTextPrimary,
-            modifier = Modifier.padding(bottom = 32.dp)
+        // Health Metrics Section
+        HealthMetricsSection(
+            onMetricClick = onHealthMetricClick
         )
 
-        if (medications.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No medications scheduled for today",
-                    fontSize = 16.sp,
-                    color = TimelyCareTextSecondary
-                )
-            }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(medications) { medication ->
-                    TodayMedicationCard(medication = medication)
+        // Today's Schedule Section
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Today's Schedule",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = TimelyCareTextPrimary
+            )
+
+            if (medications.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No medications scheduled for today",
+                        fontSize = 16.sp,
+                        color = TimelyCareTextSecondary
+                    )
+                }
+            } else {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    medications.forEach { medication ->
+                        TodayMedicationCard(medication = medication)
+                    }
                 }
             }
         }

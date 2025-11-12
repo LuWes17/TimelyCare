@@ -60,8 +60,26 @@ fun AddEditMedicationScreen(
     var dosage by remember { mutableStateOf(editingMedication?.dosage ?: "") }
     var selectedType by remember { mutableStateOf(editingMedication?.type?.toString() ?: "Pill") }
     var frequency by remember { mutableStateOf(editingMedication?.let { formatFrequencyToString(it.frequency) } ?: "Daily") }
-    var startDate by remember { mutableStateOf(formatDateToString(editingMedication?.startDate)) }
-    var endDate by remember { mutableStateOf(formatDateToString(editingMedication?.endDate)) }
+    var startDate by remember {
+        mutableStateOf(
+            if (editingMedication != null) {
+                formatDateToString(editingMedication.startDate)
+            } else {
+                // Set default start date to today for new medications
+                LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+            }
+        )
+    }
+    var endDate by remember {
+        mutableStateOf(
+            if (editingMedication != null) {
+                formatDateToString(editingMedication.endDate)
+            } else {
+                // Set default end date to 30 days from now for new medications
+                LocalDate.now().plusDays(30).format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+            }
+        )
+    }
     var medicationTimes by remember {
         mutableStateOf(
             editingMedication?.medicationTimes?.map { formatTimeToString(it) }
@@ -81,13 +99,51 @@ fun AddEditMedicationScreen(
     var medicineNameError by remember { mutableStateOf("") }
     var dosageError by remember { mutableStateOf("") }
     var timesError by remember { mutableStateOf("") }
+    var startDateError by remember { mutableStateOf("") }
+    var endDateError by remember { mutableStateOf("") }
+
+    // Helper function for parsing dates (declared before validation)
+    fun parseDateString(dateStr: String): LocalDate? {
+        return try {
+            if (dateStr.isBlank()) null
+            else LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+        } catch (e: DateTimeParseException) {
+            null
+        }
+    }
 
     fun validateForm(): Boolean {
         medicineNameError = if (medicineName.isBlank()) "Medicine name is required" else ""
         dosageError = if (dosage.isBlank()) "Dosage is required" else ""
         timesError = if (medicationTimes.isEmpty()) "At least one medication time is required" else ""
 
-        return medicineNameError.isEmpty() && dosageError.isEmpty() && timesError.isEmpty()
+        // Validate start date
+        startDateError = when {
+            startDate.isBlank() -> "Start date is required"
+            parseDateString(startDate) == null -> "Invalid start date format"
+            else -> ""
+        }
+
+        // Validate end date
+        endDateError = when {
+            endDate.isBlank() -> "End date is required"
+            parseDateString(endDate) == null -> "Invalid end date format"
+            else -> ""
+        }
+
+        // Validate date range (end date should be after or equal to start date)
+        if (startDateError.isEmpty() && endDateError.isEmpty()) {
+            val parsedStartDate = parseDateString(startDate)
+            val parsedEndDate = parseDateString(endDate)
+            if (parsedStartDate != null && parsedEndDate != null) {
+                if (parsedEndDate.isBefore(parsedStartDate)) {
+                    endDateError = "End date must be after start date"
+                }
+            }
+        }
+
+        return medicineNameError.isEmpty() && dosageError.isEmpty() && timesError.isEmpty() &&
+               startDateError.isEmpty() && endDateError.isEmpty()
     }
 
     fun parseTimeString(timeStr: String): LocalTime? {
@@ -102,33 +158,29 @@ fun AddEditMedicationScreen(
         }
     }
 
-    fun parseDateString(dateStr: String): LocalDate? {
-        return try {
-            if (dateStr.isBlank()) null
-            else LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("MM/dd/yyyy"))
-        } catch (e: DateTimeParseException) {
-            null
-        }
-    }
-
     fun parseFrequency(frequencyStr: String): Frequency {
-        return if (frequencyStr == "Daily") {
+        return try {
+            if (frequencyStr == "Daily") {
+                Frequency.Daily
+            } else {
+                val dayStrings = frequencyStr.split(", ")
+                val days = dayStrings.mapNotNull { dayStr ->
+                    when (dayStr.trim()) {
+                        "Mon" -> DayOfWeek.MONDAY
+                        "Tue" -> DayOfWeek.TUESDAY
+                        "Wed" -> DayOfWeek.WEDNESDAY
+                        "Thu" -> DayOfWeek.THURSDAY
+                        "Fri" -> DayOfWeek.FRIDAY
+                        "Sat" -> DayOfWeek.SATURDAY
+                        "Sun" -> DayOfWeek.SUNDAY
+                        else -> null
+                    }
+                }.toSet()
+                if (days.isEmpty()) Frequency.Daily else Frequency.SpecificDays(days)
+            }
+        } catch (e: Exception) {
+            // Default to Daily frequency if parsing fails
             Frequency.Daily
-        } else {
-            val dayStrings = frequencyStr.split(", ")
-            val days = dayStrings.mapNotNull { dayStr ->
-                when (dayStr.trim()) {
-                    "Mon" -> DayOfWeek.MONDAY
-                    "Tue" -> DayOfWeek.TUESDAY
-                    "Wed" -> DayOfWeek.WEDNESDAY
-                    "Thu" -> DayOfWeek.THURSDAY
-                    "Fri" -> DayOfWeek.FRIDAY
-                    "Sat" -> DayOfWeek.SATURDAY
-                    "Sun" -> DayOfWeek.SUNDAY
-                    else -> null
-                }
-            }.toSet()
-            if (days.isEmpty()) Frequency.Daily else Frequency.SpecificDays(days)
         }
     }
 
@@ -288,12 +340,16 @@ fun AddEditMedicationScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Start Date",
+                    text = "Start Date *",
                     fontWeight = FontWeight.Medium,
+                    color = if (startDateError.isNotEmpty()) Color.Red else TimelyCareTextPrimary,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Button(
-                    onClick = { showStartDatePicker = true },
+                    onClick = {
+                        showStartDatePicker = true
+                        if (startDateError.isNotEmpty()) startDateError = ""
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp),
@@ -301,7 +357,10 @@ fun AddEditMedicationScreen(
                         containerColor = Color.Transparent
                     ),
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, TimelyCareGray)
+                    border = BorderStroke(
+                        1.dp,
+                        if (startDateError.isNotEmpty()) Color.Red else TimelyCareGray
+                    )
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -310,27 +369,43 @@ fun AddEditMedicationScreen(
                     ) {
                         Text(
                             text = formatDisplayDate(startDate),
-                            color = if (startDate.isBlank()) TimelyCareGray else TimelyCareTextPrimary,
+                            color = when {
+                                startDateError.isNotEmpty() -> Color.Red
+                                startDate.isBlank() -> TimelyCareGray
+                                else -> TimelyCareTextPrimary
+                            },
                             fontSize = 18.sp,
                             textAlign = TextAlign.Start
                         )
                         Icon(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = "Select start date",
-                            tint = TimelyCareBlue
+                            tint = if (startDateError.isNotEmpty()) Color.Red else TimelyCareBlue
                         )
                     }
+                }
+                if (startDateError.isNotEmpty()) {
+                    Text(
+                        text = startDateError,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
             }
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "End Date",
+                    text = "End Date *",
                     fontWeight = FontWeight.Medium,
+                    color = if (endDateError.isNotEmpty()) Color.Red else TimelyCareTextPrimary,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Button(
-                    onClick = { showEndDatePicker = true },
+                    onClick = {
+                        showEndDatePicker = true
+                        if (endDateError.isNotEmpty()) endDateError = ""
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp),
@@ -338,7 +413,10 @@ fun AddEditMedicationScreen(
                         containerColor = Color.Transparent
                     ),
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, TimelyCareGray)
+                    border = BorderStroke(
+                        1.dp,
+                        if (endDateError.isNotEmpty()) Color.Red else TimelyCareGray
+                    )
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -347,16 +425,28 @@ fun AddEditMedicationScreen(
                     ) {
                         Text(
                             text = formatDisplayDate(endDate),
-                            color = if (endDate.isBlank()) TimelyCareGray else TimelyCareTextPrimary,
+                            color = when {
+                                endDateError.isNotEmpty() -> Color.Red
+                                endDate.isBlank() -> TimelyCareGray
+                                else -> TimelyCareTextPrimary
+                            },
                             fontSize = 18.sp,
                             textAlign = TextAlign.Start
                         )
                         Icon(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = "Select end date",
-                            tint = TimelyCareBlue
+                            tint = if (endDateError.isNotEmpty()) Color.Red else TimelyCareBlue
                         )
                     }
+                }
+                if (endDateError.isNotEmpty()) {
+                    Text(
+                        text = endDateError,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
             }
         }
@@ -471,46 +561,63 @@ fun AddEditMedicationScreen(
         Button(
             onClick = {
                 if (validateForm()) {
-                    val parsedTimes = medicationTimes.mapNotNull { parseTimeString(it) }
-                    val medication = if (editingMedication != null) {
-                        // Update existing medication
-                        editingMedication.copy(
-                            name = medicineName.trim(),
-                            dosage = dosage.trim(),
-                            type = MedicationType.fromString(selectedType),
-                            frequency = parseFrequency(frequency),
-                            startDate = parseDateString(startDate),
-                            endDate = parseDateString(endDate),
-                            medicationTimes = parsedTimes,
-                            specialInstructions = specialInstructions.trim()
-                        )
-                    } else {
-                        // Create new medication
-                        Medication(
-                            name = medicineName.trim(),
-                            dosage = dosage.trim(),
-                            type = MedicationType.fromString(selectedType),
-                            frequency = parseFrequency(frequency),
-                            startDate = parseDateString(startDate),
-                            endDate = parseDateString(endDate),
-                            medicationTimes = parsedTimes,
-                            specialInstructions = specialInstructions.trim()
-                        )
-                    }
+                    try {
+                        val parsedTimes = medicationTimes.mapNotNull { parseTimeString(it) }.ifEmpty {
+                            // Ensure at least one default time if parsing fails
+                            listOf(LocalTime.of(9, 0))
+                        }
+                        // Ensure safe string values
+                        val safeName = medicineName.trim().takeIf { it.isNotBlank() } ?: "Medicine"
+                        val safeDosage = dosage.trim().takeIf { it.isNotBlank() } ?: "1 dose"
+                        val safeInstructions = specialInstructions.trim()
 
-                    if (editingMedication != null) {
-                        repository.updateMedication(medication)
-                    } else {
-                        repository.addMedication(medication)
+                        // Parse and validate dates
+                        val parsedStartDate = parseDateString(startDate)
+                        val parsedEndDate = parseDateString(endDate)
+
+                        val medication = if (editingMedication != null) {
+                            // Update existing medication
+                            editingMedication.copy(
+                                name = safeName,
+                                dosage = safeDosage,
+                                type = MedicationType.fromString(selectedType),
+                                frequency = parseFrequency(frequency),
+                                startDate = parsedStartDate,
+                                endDate = parsedEndDate,
+                                medicationTimes = parsedTimes,
+                                specialInstructions = safeInstructions
+                            )
+                        } else {
+                            // Create new medication
+                            Medication(
+                                name = safeName,
+                                dosage = safeDosage,
+                                type = MedicationType.fromString(selectedType),
+                                frequency = parseFrequency(frequency),
+                                startDate = parsedStartDate,
+                                endDate = parsedEndDate,
+                                medicationTimes = parsedTimes,
+                                specialInstructions = safeInstructions
+                            )
+                        }
+
+                        if (editingMedication != null) {
+                            repository.updateMedication(medication)
+                        } else {
+                            repository.addMedication(medication)
+                        }
+                        onSave()
+                    } catch (e: Exception) {
+                        // Handle any error during medication creation/saving
+                        // For now, just prevent crash - could add error message later
                     }
-                    onSave()
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = TimelyCareBlue
+                containerColor = Color(0xFF4CAF50)
             ),
             shape = RoundedCornerShape(8.dp)
         ) {

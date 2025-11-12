@@ -10,6 +10,7 @@ val TimelyCareWhite = Color(0xFFFFFFFF)
 val TimelyCareGray = Color(0xFF9E9E9E)
 val TimelyCareTextPrimary = Color(0xFF212121)
 val TimelyCareTextSecondary = Color(0xFF757575)
+val TimelyCareGray200 = Color(0xFFE2E8F0)
 
 // Legacy colors for compatibility
 val Purple80 = Color(0xFFD0BCFF)

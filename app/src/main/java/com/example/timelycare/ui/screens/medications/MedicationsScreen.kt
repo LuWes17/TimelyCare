@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,7 +42,7 @@ fun MedicationsScreen(onAddClick: () -> Unit, onEditClick: (Medication) -> Unit)
                 Button(
                     onClick = onAddClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = TimelyCareBlue
+                        containerColor = Color(0xFF4CAF50)
                     ),
                     modifier = Modifier
                         .width(200.dp)
