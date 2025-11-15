@@ -67,7 +67,12 @@ fun DashboardScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     medications.forEach { medication ->
-                        TodayMedicationCard(medication = medication)
+                        medication.medicationTimes.forEach { time ->
+                            TodayMedicationCard(
+                                medication = medication,
+                                scheduledTime = time
+                            )
+                        }
                     }
                 }
             }

@@ -10,14 +10,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.timelycare.data.Medication
 import com.example.timelycare.data.Frequency
 import com.example.timelycare.data.DayOfWeek
+import com.example.timelycare.data.MedicationTakenRepository
 import com.example.timelycare.ui.theme.*
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -26,17 +30,24 @@ fun MedicationListForDate(
     medications: List<Medication>,
     modifier: Modifier = Modifier
 ) {
-    val medicationsForDate = try {
+    val medicationTimesForDate = try {
         // Defensive null checks
         if (medications == null) {
             emptyList()
         } else {
-            medications.filterNotNull().filter { medication ->
+            val scheduledMedications = medications.filterNotNull().filter { medication ->
                 try {
                     isMedicationScheduledForDate(medication, selectedDate)
                 } catch (e: Exception) {
                     // Skip this medication if filtering fails
                     false
+                }
+            }
+
+            // Expand each medication to include all its times
+            scheduledMedications.flatMap { medication ->
+                medication.medicationTimes.map { time ->
+                    Pair(medication, time)
                 }
             }
         }
@@ -60,7 +71,7 @@ fun MedicationListForDate(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        if (medicationsForDate.isEmpty()) {
+        if (medicationTimesForDate.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -77,8 +88,12 @@ fun MedicationListForDate(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(medicationsForDate) { medication ->
-                    CalendarMedicationCard(medication = medication)
+                items(medicationTimesForDate) { (medication, time) ->
+                    CalendarMedicationCard(
+                        medication = medication,
+                        scheduledTime = time,
+                        date = selectedDate
+                    )
                 }
             }
         }
@@ -88,13 +103,27 @@ fun MedicationListForDate(
 @Composable
 private fun CalendarMedicationCard(
     medication: Medication,
+    scheduledTime: LocalTime,
+    date: LocalDate,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val takenRepository = remember { MedicationTakenRepository.getInstance(context) }
+    val takenRecords by takenRepository.takenRecords.collectAsStateWithLifecycle()
+
+    val isTaken by remember(takenRecords) {
+        derivedStateOf {
+            takenRepository.isMedicationTaken(medication.id, scheduledTime, date)
+        }
+    }
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = TimelyCareWhite),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isTaken) Color(0xFF4CAF50).copy(alpha = 0.1f) else TimelyCareWhite
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        border = if (isTaken) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4CAF50)) else null
     ) {
         Row(
             modifier = Modifier
@@ -161,13 +190,20 @@ private fun CalendarMedicationCard(
                         color = TimelyCareTextSecondary,
                         modifier = Modifier.padding(top = 2.dp)
                     )
+                    Text(
+                        text = scheduledTime.format(DateTimeFormatter.ofPattern("hh:mm a")),
+                        fontSize = 14.sp,
+                        color = TimelyCareTextSecondary,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
                 }
             }
 
             Text(
-                text = "Upcoming",
+                text = if (isTaken) "Taken" else "Upcoming",
                 fontSize = 14.sp,
-                color = TimelyCareTextSecondary,
+                color = if (isTaken) Color(0xFF4CAF50) else TimelyCareTextSecondary,
                 fontWeight = FontWeight.Medium
             )
         }

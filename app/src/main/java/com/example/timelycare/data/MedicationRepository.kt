@@ -18,6 +18,10 @@ class MedicationRepository private constructor(private val context: Context?) {
     private val medicationDataService = MedicationDataService()
     private val scope = CoroutineScope(Dispatchers.IO)
 
+    private val takenRepository: MedicationTakenRepository? by lazy {
+        context?.let { MedicationTakenRepository.getInstance(it) }
+    }
+
     fun addMedication(medication: Medication) {
         _medications.value = _medications.value + medication
         syncToWatch()
@@ -40,8 +44,16 @@ class MedicationRepository private constructor(private val context: Context?) {
             scope.launch {
                 try {
                     val dataClient = Wearable.getDataClient(ctx)
+
+                    // Sync medications
                     medicationDataService.sendMedicationsToWatch(dataClient, _medications.value)
-                    Log.d("MedicationSync", "Successfully synced ${_medications.value.size} medications to watch")
+
+                    // Sync taken records
+                    takenRepository?.let { repository ->
+                        medicationDataService.sendTakenRecordsToWatch(dataClient, repository.takenRecords.value)
+                    }
+
+                    Log.d("MedicationSync", "Successfully synced ${_medications.value.size} medications and taken records to watch")
                 } catch (e: Exception) {
                     Log.w("MedicationSync", "Wear OS sync not available: ${e.message}")
                     // Could implement alternative sync method here (e.g., shared preferences, file system, etc.)
@@ -52,6 +64,10 @@ class MedicationRepository private constructor(private val context: Context?) {
 
     fun getMedicationById(id: String): Medication? {
         return _medications.value.find { it.id == id }
+    }
+
+    fun syncTakenStatusToWatch() {
+        syncToWatch()
     }
 
     companion object {

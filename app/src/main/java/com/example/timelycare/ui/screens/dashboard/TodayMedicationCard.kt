@@ -13,18 +13,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.timelycare.data.Medication
+import com.example.timelycare.data.MedicationTakenRepository
 import com.example.timelycare.ui.theme.*
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun TodayMedicationCard(medication: Medication) {
-    var isTaken by remember { mutableStateOf(false) } // For demo purposes
+fun TodayMedicationCard(
+    medication: Medication,
+    scheduledTime: LocalTime
+) {
+    val context = LocalContext.current
+    val takenRepository = remember { MedicationTakenRepository.getInstance(context) }
+    val takenRecords by takenRepository.takenRecords.collectAsStateWithLifecycle()
+
+    val isTaken by remember(takenRecords) {
+        derivedStateOf {
+            takenRepository.isMedicationTaken(medication.id, scheduledTime)
+        }
+    }
+
     val borderColor = if (isTaken) Color(0xFF4CAF50) else Color.Transparent
-    val firstTime = medication.medicationTimes.firstOrNull()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -119,7 +134,7 @@ fun TodayMedicationCard(medication: Medication) {
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = firstTime?.format(DateTimeFormatter.ofPattern("hh:mm a")) ?: "No time",
+                            text = scheduledTime.format(DateTimeFormatter.ofPattern("hh:mm a")),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = TimelyCareTextPrimary
@@ -138,7 +153,13 @@ fun TodayMedicationCard(medication: Medication) {
 
             // Bottom action button
             Button(
-                onClick = { isTaken = !isTaken },
+                onClick = {
+                    if (isTaken) {
+                        takenRepository.markAsNotTaken(medication.id, scheduledTime)
+                    } else {
+                        takenRepository.markAsTaken(medication.id, scheduledTime)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),

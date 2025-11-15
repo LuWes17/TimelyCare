@@ -67,3 +67,12 @@ enum class DayOfWeek {
         SUNDAY -> "Sun"
     }
 }
+
+@Stable
+data class MedicationTakenRecord(
+    val medicationId: String,
+    val takenDate: LocalDate,
+    val takenTime: LocalTime,
+    val scheduledTime: LocalTime,
+    val recordId: String = UUID.randomUUID().toString()
+)
