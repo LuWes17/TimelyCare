@@ -53,7 +53,7 @@ class MedicationDataService {
         val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
         return takenRecords.joinToString("|") { record ->
-            "${record.medicationId},${record.takenDate.format(dateFormatter)},${record.scheduledTime.format(timeFormatter)}"
+            "${record.medicationId},${record.takenDate.format(dateFormatter)},${record.takenTime.format(timeFormatter)},${record.scheduledTime.format(timeFormatter)}"
         }
     }
 }

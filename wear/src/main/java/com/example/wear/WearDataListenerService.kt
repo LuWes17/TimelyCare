@@ -7,6 +7,8 @@ class WearDataListenerService : WearableListenerService() {
     companion object {
         private const val MEDICATION_PATH = "/medication_data"
         private const val MEDICATION_KEY = "medications"
+        private const val TAKEN_RECORDS_PATH = "/taken_records"
+        private const val TAKEN_RECORDS_KEY = "taken_records"
     }
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
@@ -19,18 +21,32 @@ class WearDataListenerService : WearableListenerService() {
             if (event.type == DataEvent.TYPE_CHANGED) {
                 val item = event.dataItem
                 android.util.Log.d("WearDataListener", "Data item path: ${item.uri.path}")
-                if (item.uri.path?.compareTo(MEDICATION_PATH) == 0) {
-                    val dataMap = DataMapItem.fromDataItem(item).dataMap
-                    val medicationsData = dataMap.getString(MEDICATION_KEY)
-                    android.util.Log.d("WearDataListener", "Received medication data: $medicationsData")
+                when (item.uri.path) {
+                    MEDICATION_PATH -> {
+                        val dataMap = DataMapItem.fromDataItem(item).dataMap
+                        val medicationsData = dataMap.getString(MEDICATION_KEY)
+                        android.util.Log.d("WearDataListener", "Received medication data: $medicationsData")
 
-                    val medications = parseMedications(medicationsData ?: "")
-                    android.util.Log.d("WearDataListener", "Parsed ${medications.size} medications")
+                        val medications = parseMedications(medicationsData ?: "")
+                        android.util.Log.d("WearDataListener", "Parsed ${medications.size} medications")
 
-                    // Update local storage
-                    updateWatchMedications(medications)
-                } else {
-                    android.util.Log.d("WearDataListener", "Path does not match: ${item.uri.path} != $MEDICATION_PATH")
+                        // Update local storage
+                        updateWatchMedications(medications)
+                    }
+                    TAKEN_RECORDS_PATH -> {
+                        val dataMap = DataMapItem.fromDataItem(item).dataMap
+                        val takenRecordsData = dataMap.getString(TAKEN_RECORDS_KEY)
+                        android.util.Log.d("WearDataListener", "Received taken records data: $takenRecordsData")
+
+                        val takenRecords = parseTakenRecords(takenRecordsData ?: "")
+                        android.util.Log.d("WearDataListener", "Parsed ${takenRecords.size} taken records")
+
+                        // Update local storage
+                        updateWatchTakenRecords(takenRecords)
+                    }
+                    else -> {
+                        android.util.Log.d("WearDataListener", "Unknown path: ${item.uri.path}")
+                    }
                 }
             }
         }
@@ -64,6 +80,48 @@ class WearDataListenerService : WearableListenerService() {
         // Log for debugging
         medications.forEach { med ->
             android.util.Log.d("WearMeds", "Received: ${med.name} - ${med.dosage}")
+        }
+    }
+
+    private fun parseTakenRecords(data: String): List<MedicationTakenRecord> {
+        if (data.isEmpty()) return emptyList()
+
+        return data.split("|").mapNotNull { recordString ->
+            val parts = recordString.split(",")
+            when (parts.size) {
+                3 -> {
+                    // Legacy format: medicationId, takenDate, scheduledTime
+                    MedicationTakenRecord(
+                        medicationId = parts[0],
+                        takenDate = parts[1],
+                        takenTime = parts[2], // Use scheduled time as taken time for legacy
+                        scheduledTime = parts[2]
+                    )
+                }
+                4 -> {
+                    // New format: medicationId, takenDate, takenTime, scheduledTime
+                    MedicationTakenRecord(
+                        medicationId = parts[0],
+                        takenDate = parts[1],
+                        takenTime = parts[2],
+                        scheduledTime = parts[3]
+                    )
+                }
+                else -> null
+            }
+        }
+    }
+
+    private fun updateWatchTakenRecords(takenRecords: List<MedicationTakenRecord>) {
+        // Update repository using singleton
+        val repository = MedicationRepository.getInstance(this)
+        repository.updateTakenRecords(takenRecords)
+
+        android.util.Log.d("WearDataListener", "Updated repository with ${takenRecords.size} taken records")
+
+        // Log for debugging
+        takenRecords.forEach { record ->
+            android.util.Log.d("WearTakenRecords", "Received: ${record.medicationId} - ${record.takenDate} - ${record.scheduledTime}")
         }
     }
 }

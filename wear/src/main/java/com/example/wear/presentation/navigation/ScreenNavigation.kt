@@ -4,6 +4,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import com.example.wear.data.settings.SettingsRepository
 import com.example.wear.presentation.screens.*
+import com.example.wear.presentation.screens.emergency.EmergencyScreen
+import com.example.wear.presentation.screens.vitals.VitalsScreen
+import com.example.wear.presentation.screens.medications.HistoryScreen
+import com.example.wear.presentation.screens.medications.MaintenanceScreen
+import com.example.wear.presentation.screens.medications.UpcomingScreen
 import com.example.wear.presentation.theme.TimelyCareTheme
 
 enum class Screen {

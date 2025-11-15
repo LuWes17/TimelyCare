@@ -141,7 +141,7 @@ fun CircularActionButtons(
 
         val icon = when (complication) {
             com.example.wear.data.settings.ComplicationFeature.SETTINGS -> Icons.Default.Settings
-            com.example.wear.data.settings.ComplicationFeature.ALL_MEDS -> Icons.Default.LocalPharmacy
+            com.example.wear.data.settings.ComplicationFeature.ALL_MEDS -> Icons.Default.HealthAndSafety
             com.example.wear.data.settings.ComplicationFeature.HISTORY -> Icons.Default.History
             com.example.wear.data.settings.ComplicationFeature.MAINTENANCE -> Icons.Default.Refresh
             com.example.wear.data.settings.ComplicationFeature.EMERGENCY -> Icons.Default.Warning

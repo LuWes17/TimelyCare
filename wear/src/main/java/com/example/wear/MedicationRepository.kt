@@ -14,20 +14,81 @@ data class Medication(
     val isMaintenanceMed: Boolean = false
 )
 
+data class MedicationTakenRecord(
+    val medicationId: String,
+    val takenDate: String, // Format: "yyyy-MM-dd"
+    val takenTime: String, // Format: "HH:mm" - actual time taken
+    val scheduledTime: String // Format: "HH:mm" - originally scheduled time
+)
+
+data class EmergencyContact(
+    val id: String,
+    val name: String,
+    val relationship: String,
+    val phoneNumber: String,
+    val isPrimary: Boolean = false
+)
+
 class MedicationRepository private constructor(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("medications", Context.MODE_PRIVATE)
 
     private val _medications = MutableStateFlow<List<Medication>>(emptyList())
     val medications: StateFlow<List<Medication>> = _medications
 
+    private val _takenRecords = MutableStateFlow<List<MedicationTakenRecord>>(emptyList())
+    val takenRecords: StateFlow<List<MedicationTakenRecord>> = _takenRecords
+
+    private val _emergencyContacts = MutableStateFlow<List<EmergencyContact>>(emptyList())
+    val emergencyContacts: StateFlow<List<EmergencyContact>> = _emergencyContacts
+
     init {
         loadMedications()
+        loadTakenRecords()
+        loadEmergencyContacts()
+
+        // Add sample medications for testing if none exist
+        if (_medications.value.isEmpty()) {
+            addSampleMedications()
+        }
+
+        // Add sample emergency contacts if none exist
+        if (_emergencyContacts.value.isEmpty()) {
+            addSampleEmergencyContacts()
+        }
     }
 
     fun updateMedications(medications: List<Medication>) {
         android.util.Log.d("WearMedicationRepo", "Updating medications: ${medications.size} items")
         _medications.value = medications
         saveMedications(medications)
+    }
+
+    fun updateTakenRecords(takenRecords: List<MedicationTakenRecord>) {
+        android.util.Log.d("WearMedicationRepo", "Updating taken records: ${takenRecords.size} items")
+        _takenRecords.value = takenRecords
+        saveTakenRecords(takenRecords)
+    }
+
+    fun isMedicationTaken(medicationId: String, scheduledTime: String, date: String): Boolean {
+        return _takenRecords.value.any { record ->
+            record.medicationId == medicationId &&
+            record.scheduledTime == scheduledTime &&
+            record.takenDate == date
+        }
+    }
+
+    fun updateEmergencyContacts(contacts: List<EmergencyContact>) {
+        android.util.Log.d("WearMedicationRepo", "Updating emergency contacts: ${contacts.size} items")
+        _emergencyContacts.value = contacts
+        saveEmergencyContacts(contacts)
+    }
+
+    fun getPrimaryContact(): EmergencyContact? {
+        return _emergencyContacts.value.find { it.isPrimary }
+    }
+
+    fun getBackupContacts(): List<EmergencyContact> {
+        return _emergencyContacts.value.filter { !it.isPrimary }
     }
 
     companion object {
@@ -72,5 +133,143 @@ class MedicationRepository private constructor(context: Context) {
                 else -> null
             }
         }
+    }
+
+    private fun saveTakenRecords(takenRecords: List<MedicationTakenRecord>) {
+        val recordsString = takenRecords.joinToString("|") { record ->
+            "${record.medicationId},${record.takenDate},${record.takenTime},${record.scheduledTime}"
+        }
+        prefs.edit().putString("taken_records_data", recordsString).apply()
+    }
+
+    private fun loadTakenRecords() {
+        val recordsString = prefs.getString("taken_records_data", "") ?: ""
+        val takenRecords = parseTakenRecords(recordsString)
+        _takenRecords.value = takenRecords
+    }
+
+    private fun parseTakenRecords(data: String): List<MedicationTakenRecord> {
+        if (data.isEmpty()) return emptyList()
+
+        return data.split("|").mapNotNull { recordString ->
+            val parts = recordString.split(",")
+            when (parts.size) {
+                3 -> {
+                    // Legacy format: medicationId, takenDate, scheduledTime
+                    MedicationTakenRecord(parts[0], parts[1], parts[2], parts[2])
+                }
+                4 -> {
+                    // New format: medicationId, takenDate, takenTime, scheduledTime
+                    MedicationTakenRecord(parts[0], parts[1], parts[2], parts[3])
+                }
+                else -> null
+            }
+        }
+    }
+
+    private fun addSampleMedications() {
+        val sampleMedications = listOf(
+            Medication(
+                id = "sample_1",
+                name = "Metformin",
+                dosage = "500mg",
+                time = "8:00 AM",
+                frequency = "Daily",
+                isMaintenanceMed = false
+            ),
+            Medication(
+                id = "sample_2",
+                name = "Amoxicillin",
+                dosage = "250mg",
+                time = "12:00 PM",
+                frequency = "Daily",
+                isMaintenanceMed = false
+            ),
+            Medication(
+                id = "sample_3",
+                name = "Lisinopril",
+                dosage = "10mg",
+                time = "6:00 PM",
+                frequency = "Daily",
+                isMaintenanceMed = true
+            )
+        )
+
+        _medications.value = sampleMedications
+        saveMedications(sampleMedications)
+
+        // Also add a sample taken record for one medication to show in history
+        val sampleTakenRecord = MedicationTakenRecord(
+            medicationId = "sample_1",
+            takenDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
+            takenTime = "08:05", // Taken at 8:05 AM
+            scheduledTime = "08:00" // Scheduled for 8:00 AM
+        )
+
+        _takenRecords.value = listOf(sampleTakenRecord)
+        saveTakenRecords(listOf(sampleTakenRecord))
+
+        android.util.Log.d("WearMedicationRepo", "Added ${sampleMedications.size} sample medications")
+    }
+
+    private fun saveEmergencyContacts(contacts: List<EmergencyContact>) {
+        val contactsString = contacts.joinToString("|") { contact ->
+            "${contact.id},${contact.name},${contact.relationship},${contact.phoneNumber},${contact.isPrimary}"
+        }
+        prefs.edit().putString("emergency_contacts_data", contactsString).apply()
+    }
+
+    private fun loadEmergencyContacts() {
+        val contactsString = prefs.getString("emergency_contacts_data", "") ?: ""
+        val contacts = parseEmergencyContacts(contactsString)
+        _emergencyContacts.value = contacts
+    }
+
+    private fun parseEmergencyContacts(data: String): List<EmergencyContact> {
+        if (data.isEmpty()) return emptyList()
+
+        return data.split("|").mapNotNull { contactString ->
+            val parts = contactString.split(",")
+            if (parts.size == 5) {
+                EmergencyContact(
+                    id = parts[0],
+                    name = parts[1],
+                    relationship = parts[2],
+                    phoneNumber = parts[3],
+                    isPrimary = parts[4].toBoolean()
+                )
+            } else null
+        }
+    }
+
+    private fun addSampleEmergencyContacts() {
+        val sampleContacts = listOf(
+            EmergencyContact(
+                id = "contact_1",
+                name = "Sarah Johnson",
+                relationship = "Daughter",
+                phoneNumber = "+1-555-0123",
+                isPrimary = true
+            ),
+            EmergencyContact(
+                id = "contact_2",
+                name = "Michael Johnson",
+                relationship = "Son",
+                phoneNumber = "+1-555-0124",
+                isPrimary = false
+            ),
+            EmergencyContact(
+                id = "contact_3",
+                name = "Dr. Anderson",
+                relationship = "Doctor",
+                phoneNumber = "+1-555-0125",
+                isPrimary = false
+            )
+        )
+
+        _emergencyContacts.value = sampleContacts
+        saveEmergencyContacts(sampleContacts)
+
+        android.util.Log.d("WearMedicationRepo", "Added ${sampleContacts.size} sample emergency contacts")
     }
 }

@@ -345,7 +345,7 @@ private fun ComplicationToggle(
 ) {
     val icon = when (feature) {
         ComplicationFeature.SETTINGS -> Icons.Default.Settings
-        ComplicationFeature.ALL_MEDS -> Icons.Default.LocalPharmacy
+        ComplicationFeature.ALL_MEDS -> Icons.Default.HealthAndSafety
         ComplicationFeature.HISTORY -> Icons.Default.History
         ComplicationFeature.MAINTENANCE -> Icons.Default.Refresh
         ComplicationFeature.EMERGENCY -> Icons.Default.Warning
