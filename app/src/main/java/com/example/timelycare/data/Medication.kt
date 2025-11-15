@@ -15,7 +15,8 @@ data class Medication(
     val startDate: LocalDate?,
     val endDate: LocalDate?,
     val medicationTimes: List<LocalTime>,
-    val specialInstructions: String = ""
+    val specialInstructions: String = "",
+    val isMaintenanceMed: Boolean = false
 )
 
 enum class MedicationType {

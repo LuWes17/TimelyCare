@@ -89,6 +89,7 @@ fun AddEditMedicationScreen(
         )
     }
     var specialInstructions by remember { mutableStateOf(editingMedication?.specialInstructions ?: "") }
+    var isMaintenanceMed by remember { mutableStateOf(editingMedication?.isMaintenanceMed ?: false) }
     var showFrequencyModal by remember { mutableStateOf(false) }
     var typeDropdownExpanded by remember { mutableStateOf(false) }
     var showStartDatePicker by remember { mutableStateOf(false) }
@@ -543,13 +544,47 @@ fun AddEditMedicationScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
-                .padding(bottom = 24.dp),
+                .padding(bottom = 16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = TimelyCareBlue,
                 focusedLabelColor = TimelyCareBlue
             ),
             maxLines = 4
         )
+
+        // Maintenance Medication Toggle
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Maintenance Medication",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    color = TimelyCareTextPrimary
+                )
+                Text(
+                    text = "Mark this as a maintenance medication",
+                    fontSize = 14.sp,
+                    color = TimelyCareGray,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+            Switch(
+                checked = isMaintenanceMed,
+                onCheckedChange = { isMaintenanceMed = it },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = TimelyCareBlue,
+                    checkedTrackColor = TimelyCareBlue.copy(alpha = 0.5f),
+                    uncheckedThumbColor = TimelyCareGray,
+                    uncheckedTrackColor = TimelyCareGray.copy(alpha = 0.3f)
+                )
+            )
+        }
 
         if (timesError.isNotEmpty()) {
             Text(
@@ -587,7 +622,8 @@ fun AddEditMedicationScreen(
                                 startDate = parsedStartDate,
                                 endDate = parsedEndDate,
                                 medicationTimes = parsedTimes,
-                                specialInstructions = safeInstructions
+                                specialInstructions = safeInstructions,
+                                isMaintenanceMed = isMaintenanceMed
                             )
                         } else {
                             // Create new medication
@@ -599,7 +635,8 @@ fun AddEditMedicationScreen(
                                 startDate = parsedStartDate,
                                 endDate = parsedEndDate,
                                 medicationTimes = parsedTimes,
-                                specialInstructions = safeInstructions
+                                specialInstructions = safeInstructions,
+                                isMaintenanceMed = isMaintenanceMed
                             )
                         }
 

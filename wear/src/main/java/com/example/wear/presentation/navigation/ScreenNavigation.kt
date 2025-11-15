@@ -21,6 +21,7 @@ enum class Screen {
 fun AppNavigation() {
     val context = LocalContext.current
     val settingsRepository = remember { SettingsRepository.getInstance(context) }
+    val medicationRepository = remember { com.example.wear.MedicationRepository.getInstance(context) }
     val settings by settingsRepository.settingsFlow.collectAsState(initial = com.example.wear.data.settings.AppSettings())
 
     var currentScreen by remember { mutableStateOf(Screen.HOME) }
@@ -55,8 +56,9 @@ fun AppNavigation() {
                 )
             }
             Screen.ALL_MEDS -> {
-                AllMedsScreen(
-                    onBackClick = { currentScreen = Screen.HOME }
+                AllMedicationsScreen(
+                    onBackClick = { currentScreen = Screen.HOME },
+                    medicationRepository = medicationRepository
                 )
             }
             Screen.HISTORY -> {
@@ -66,7 +68,8 @@ fun AppNavigation() {
             }
             Screen.MAINTENANCE -> {
                 MaintenanceScreen(
-                    onBackClick = { currentScreen = Screen.HOME }
+                    onBackClick = { currentScreen = Screen.HOME },
+                    medicationRepository = medicationRepository
                 )
             }
             Screen.EMERGENCY -> {

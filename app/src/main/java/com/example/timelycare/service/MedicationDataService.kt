@@ -28,7 +28,7 @@ class MedicationDataService {
         // Convert to simplified format for watch communication
         return medications.joinToString("|") { med ->
             val firstTime = med.medicationTimes.firstOrNull()?.format(DateTimeFormatter.ofPattern("h:mm a")) ?: "No time"
-            "${med.id},${med.name},${med.dosage},$firstTime,${med.frequency}"
+            "${med.id},${med.name},${med.dosage},$firstTime,${med.frequency},${med.isMaintenanceMed}"
         }
     }
 }

@@ -41,8 +41,15 @@ class WearDataListenerService : WearableListenerService() {
 
         return data.split("|").mapNotNull { medString ->
             val parts = medString.split(",")
-            if (parts.size == 5) {
-                Medication(parts[0], parts[1], parts[2], parts[3], parts[4])
+            if (parts.size == 6) {
+                Medication(
+                    id = parts[0],
+                    name = parts[1],
+                    dosage = parts[2],
+                    time = parts[3],
+                    frequency = parts[4],
+                    isMaintenanceMed = parts[5].toBoolean()
+                )
             } else null
         }
     }

@@ -10,7 +10,8 @@ data class Medication(
     val name: String,
     val dosage: String,
     val time: String,
-    val frequency: String
+    val frequency: String,
+    val isMaintenanceMed: Boolean = false
 )
 
 class MedicationRepository private constructor(context: Context) {
@@ -42,7 +43,7 @@ class MedicationRepository private constructor(context: Context) {
 
     private fun saveMedications(medications: List<Medication>) {
         val medicationsString = medications.joinToString("|") { med ->
-            "${med.id},${med.name},${med.dosage},${med.time},${med.frequency}"
+            "${med.id},${med.name},${med.dosage},${med.time},${med.frequency},${med.isMaintenanceMed}"
         }
         prefs.edit().putString("medications_data", medicationsString).apply()
     }
@@ -58,9 +59,18 @@ class MedicationRepository private constructor(context: Context) {
 
         return data.split("|").mapNotNull { medString ->
             val parts = medString.split(",")
-            if (parts.size == 5) {
-                Medication(parts[0], parts[1], parts[2], parts[3], parts[4])
-            } else null
+            when (parts.size) {
+                5 -> {
+                    // Legacy format without maintenance field
+                    Medication(parts[0], parts[1], parts[2], parts[3], parts[4], false)
+                }
+                6 -> {
+                    // New format with maintenance field
+                    val isMaintenanceMed = parts[5].toBooleanStrictOrNull() ?: false
+                    Medication(parts[0], parts[1], parts[2], parts[3], parts[4], isMaintenanceMed)
+                }
+                else -> null
+            }
         }
     }
 }
