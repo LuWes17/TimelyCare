@@ -84,7 +84,11 @@ fun AppNavigation() {
             }
             Screen.VITALS -> {
                 VitalsScreen(
-                    onBackClick = { currentScreen = Screen.HOME }
+                    onBackClick = { currentScreen = Screen.HOME },
+                    onHeartClick = {},
+                    onTempClick = {},
+                    onBpClick = {},
+                    onGlucoseClick = {}
                 )
             }
             Screen.UPCOMING -> {
