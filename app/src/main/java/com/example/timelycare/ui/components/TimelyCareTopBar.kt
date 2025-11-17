@@ -14,7 +14,9 @@ import com.example.timelycare.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimelyCareTopBar() {
+fun TimelyCareTopBar(
+    onSettingsClick: () -> Unit = {}
+) {
     TopAppBar(
         title = {
             Text(
@@ -25,7 +27,7 @@ fun TimelyCareTopBar() {
             )
         },
         actions = {
-            IconButton(onClick = { /* Settings clicked */ }) {
+            IconButton(onClick = onSettingsClick) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",

@@ -4,9 +4,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.timelycare.data.LanguageOption
 import com.example.timelycare.ui.theme.*
+import com.example.timelycare.ui.theme.LocalUserSettings
 
 data class BottomNavItem(
     val title: String,
@@ -18,11 +21,24 @@ fun TimelyCareBottomNavigation(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val lang = LocalUserSettings.current.language
     val items = listOf(
-        BottomNavItem("Dashboard", Icons.Default.Home),
-        BottomNavItem("Medications", Icons.Default.Add),
-        BottomNavItem("Calendar", Icons.Default.DateRange),
-        BottomNavItem("Contacts", Icons.Default.Person)
+        BottomNavItem(
+            title = if (lang == LanguageOption.FILIPINO) "Dashboard" else "Dashboard",
+            icon = Icons.Default.Home
+        ),
+        BottomNavItem(
+            title = if (lang == LanguageOption.FILIPINO) "Gamot" else "Medications",
+            icon = Icons.Default.Add
+        ),
+        BottomNavItem(
+            title = if (lang == LanguageOption.FILIPINO) "Kalendaryo" else "Calendar",
+            icon = Icons.Default.DateRange
+        ),
+        BottomNavItem(
+            title = if (lang == LanguageOption.FILIPINO) "Kontak" else "Contacts",
+            icon = Icons.Default.Person
+        )
     )
 
     NavigationBar(

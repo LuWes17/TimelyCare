@@ -9,7 +9,18 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.timelycare.data.SettingsRepository
+import com.example.timelycare.data.UserSettings
+import com.example.timelycare.ui.theme.TimelyDynamicColors
+
+val LocalUserSettings = staticCompositionLocalOf { UserSettings() }
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -35,24 +46,64 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun TimelyCareTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean? = null,
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val settingsRepository = remember { SettingsRepository.getInstance(context) }
+    val settings by settingsRepository.settings.collectAsStateWithLifecycle()
+    val useDarkTheme = darkTheme ?: settings.darkModeEnabled || isSystemInDarkTheme()
+
+    // Map theme color index to accent palette (order must match SettingsScreen)
+    val accentPalettes = listOf<Triple<Color, Color, Color>>(
+        Triple(Color(0xFF4285F4), Color(0xFF6DA4F7), Color(0xFF0D47A1)), // Blue
+        Triple(Color(0xFFD64545), Color(0xFFE57373), Color(0xFFB71C1C)), // Red
+        Triple(Color(0xFF2F9F5B), Color(0xFF66BB6A), Color(0xFF1B5E20)), // Green
+        Triple(Color(0xFF7A4EDB), Color(0xFF9575CD), Color(0xFF4527A0)), // Purple
+        Triple(Color(0xFFED873F), Color(0xFFFFB74D), Color(0xFFE65100)), // Orange
+        Triple(Color(0xFFE91E63), Color(0xFFF06292), Color(0xFFC2185B))  // Pink
+    )
+    val accent = accentPalettes.getOrElse(settings.themeColorIndex) { accentPalettes.first() }
+
+    // Update dynamic colors based on settings
+    TimelyDynamicColors.primary = accent.first
+    TimelyDynamicColors.primaryLight = accent.second
+    TimelyDynamicColors.primaryDark = accent.third
+
+    if (useDarkTheme) {
+        TimelyDynamicColors.background = Color(0xFF0F172A)
+        TimelyDynamicColors.white = Color(0xFF111827)
+        TimelyDynamicColors.gray = Color(0xFF9CA3AF)
+        TimelyDynamicColors.gray200 = Color(0xFF374151)
+        TimelyDynamicColors.textPrimary = Color(0xFFF9FAFB)
+        TimelyDynamicColors.textSecondary = Color(0xFFE5E7EB)
+    } else {
+        TimelyDynamicColors.background = Color(0xFFF5F5F5)
+        TimelyDynamicColors.white = Color(0xFFFFFFFF)
+        TimelyDynamicColors.gray = Color(0xFF9E9E9E)
+        TimelyDynamicColors.gray200 = Color(0xFFE2E8F0)
+        TimelyDynamicColors.textPrimary = Color(0xFF111827)
+        TimelyDynamicColors.textSecondary = Color(0xFF6B7280)
+    }
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (useDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
+        useDarkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(
+        LocalUserSettings provides settings
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

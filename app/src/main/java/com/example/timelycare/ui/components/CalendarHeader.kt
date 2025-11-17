@@ -14,7 +14,9 @@ import com.example.timelycare.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarHeader() {
+fun CalendarHeader(
+    onSettingsClick: () -> Unit = {}
+) {
     TopAppBar(
         title = {
             Text(
@@ -25,7 +27,7 @@ fun CalendarHeader() {
             )
         },
         actions = {
-            IconButton(onClick = { /* TODO: Settings clicked */ }) {
+            IconButton(onClick = onSettingsClick) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",

@@ -1,16 +1,34 @@
 package com.example.timelycare.ui.theme
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 
-// TimelyCare Color Palette
-val TimelyCareBlue = Color(0xFF4285F4)
-val TimelyCareBlueLight = Color(0xFF6DA4F7)
-val TimelyCareBackground = Color(0xFFF5F5F5)
-val TimelyCareWhite = Color(0xFFFFFFFF)
-val TimelyCareGray = Color(0xFF9E9E9E)
-val TimelyCareTextPrimary = Color(0xFF212121)
-val TimelyCareTextSecondary = Color(0xFF757575)
-val TimelyCareGray200 = Color(0xFFE2E8F0)
+// Dynamic palette so Settings can adjust accent and dark mode globally.
+object TimelyDynamicColors {
+    var primary by mutableStateOf(Color(0xFF4285F4))
+    var primaryLight by mutableStateOf(Color(0xFF6DA4F7))
+    var primaryDark by mutableStateOf(Color(0xFF0D47A1))
+
+    var background by mutableStateOf(Color(0xFFF5F5F5))
+    var white by mutableStateOf(Color(0xFFFFFFFF))
+    var gray by mutableStateOf(Color(0xFF9E9E9E))
+    var textPrimary by mutableStateOf(Color(0xFF212121))
+    var textSecondary by mutableStateOf(Color(0xFF757575))
+    var gray200 by mutableStateOf(Color(0xFFE2E8F0))
+}
+
+// TimelyCare Color Palette (backed by dynamic colors)
+val TimelyCareBlue: Color get() = TimelyDynamicColors.primary
+val TimelyCareBlueLight: Color get() = TimelyDynamicColors.primaryLight
+val TimelyCareBlueDark: Color get() = TimelyDynamicColors.primaryDark // Darker shade of blue
+val TimelyCareBackground: Color get() = TimelyDynamicColors.background
+val TimelyCareWhite: Color get() = TimelyDynamicColors.white
+val TimelyCareGray: Color get() = TimelyDynamicColors.gray
+val TimelyCareTextPrimary: Color get() = TimelyDynamicColors.textPrimary
+val TimelyCareTextSecondary: Color get() = TimelyDynamicColors.textSecondary
+val TimelyCareGray200: Color get() = TimelyDynamicColors.gray200
 
 // Legacy colors for compatibility
 val Purple80 = Color(0xFFD0BCFF)

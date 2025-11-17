@@ -111,18 +111,20 @@ private fun getHealthMetricIcon(iconType: HealthMetricIcon): ImageVector {
 @Composable
 private fun getIconColor(iconType: HealthMetricIcon): Color {
     return when (iconType) {
-        HealthMetricIcon.HEART_RATE -> Color(0xFFE53E3E) // Red
-        HealthMetricIcon.BLOOD_PRESSURE -> TimelyCareBlue // Blue
-        HealthMetricIcon.GLUCOSE -> Color(0xFF38A169) // Green
+        // Use theme accent color for all metric icons so they follow theme color
+        HealthMetricIcon.HEART_RATE -> TimelyCareBlue
+        HealthMetricIcon.BLOOD_PRESSURE -> TimelyCareBlue
+        HealthMetricIcon.GLUCOSE -> TimelyCareBlue
     }
 }
 
 @Composable
 private fun getIconBackgroundColor(iconType: HealthMetricIcon): Color {
     return when (iconType) {
-        HealthMetricIcon.HEART_RATE -> Color(0xFFE53E3E).copy(alpha = 0.1f)
+        // Use a faint accent background for all metric icons
+        HealthMetricIcon.HEART_RATE -> TimelyCareBlue.copy(alpha = 0.1f)
         HealthMetricIcon.BLOOD_PRESSURE -> TimelyCareBlue.copy(alpha = 0.1f)
-        HealthMetricIcon.GLUCOSE -> Color(0xFF38A169).copy(alpha = 0.1f)
+        HealthMetricIcon.GLUCOSE -> TimelyCareBlue.copy(alpha = 0.1f)
     }
 }
 

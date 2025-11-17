@@ -21,6 +21,7 @@ import com.example.timelycare.ui.screens.contacts.ContactsScreen
 import com.example.timelycare.ui.screens.heartrate.HeartRateScreen
 import com.example.timelycare.ui.screens.bloodpressure.BloodPressureScreen
 import com.example.timelycare.ui.screens.glucose.GlucoseScreen
+import com.example.timelycare.ui.screens.settings.SettingsScreen
 import com.example.timelycare.data.Medication
 
 @Composable
@@ -31,6 +32,7 @@ fun TimelyCareApp() {
     var showHeartRateScreen by remember { mutableStateOf(false) }
     var showBloodPressureScreen by remember { mutableStateOf(false) }
     var showGlucoseScreen by remember { mutableStateOf(false) }
+    var showSettingsScreen by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -45,14 +47,15 @@ fun TimelyCareApp() {
                 showHeartRateScreen -> null // Heart rate screen has its own header
                 showBloodPressureScreen -> null // Blood pressure screen has its own header
                 showGlucoseScreen -> null // Glucose screen has its own header
+                showSettingsScreen -> null // Settings screen has its own header
                 selectedTabIndex == 1 -> MedicationsHeader(onAddClick = { showAddMedicine = true })
-                selectedTabIndex == 2 -> CalendarHeader()
-                selectedTabIndex == 3 -> ContactsHeader()
-                else -> TimelyCareTopBar()
+                selectedTabIndex == 2 -> CalendarHeader(onSettingsClick = { showSettingsScreen = true })
+                selectedTabIndex == 3 -> ContactsHeader(onSettingsClick = { showSettingsScreen = true })
+                else -> TimelyCareTopBar(onSettingsClick = { showSettingsScreen = true })
             }
         },
         bottomBar = {
-            if (!showAddMedicine && !showHeartRateScreen && !showBloodPressureScreen && !showGlucoseScreen) {
+            if (!showAddMedicine && !showHeartRateScreen && !showBloodPressureScreen && !showGlucoseScreen && !showSettingsScreen) {
                 TimelyCareBottomNavigation(
                     selectedIndex = selectedTabIndex,
                     onTabSelected = { selectedTabIndex = it }
@@ -67,6 +70,9 @@ fun TimelyCareApp() {
                 .padding(paddingValues)
         ) {
             when {
+                showSettingsScreen -> SettingsScreen(
+                    onBackClick = { showSettingsScreen = false }
+                )
                 showAddMedicine -> AddEditMedicationScreen(
                     editingMedication = editingMedication,
                     onSave = {
