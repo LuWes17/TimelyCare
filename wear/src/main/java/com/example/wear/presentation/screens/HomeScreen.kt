@@ -55,11 +55,10 @@ fun HomeScreen(
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Spacer(modifier = Modifier.height(42.dp))
-
-            // Time Display
+            // Time Display - Centered
             Text(
                 text = currentTime,
                 style = MaterialTheme.typography.display1,
@@ -71,13 +70,13 @@ fun HomeScreen(
                 text = currentDate,
                 style = MaterialTheme.typography.caption1,
                 color = MaterialTheme.colors.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Heart Rate Section
+            // Heart Rate Section - Centered
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(top = 8.dp)
             ) {
                 Text(
                     text = "$heartRate BPM",
@@ -93,13 +92,17 @@ fun HomeScreen(
                     fontSize = 12.sp
                 )
             }
-
         }
 
-        // Circular Action Buttons positioned around screen edge
+        // Circular Action Buttons with filtered complications
         CircularActionButtons(
             onNavigateToScreen = onNavigateToScreen,
-            enabledComplications = settings.enabledComplications.toList(),
+            enabledComplications = settings.enabledComplications
+                .filter { 
+                    it != com.example.wear.data.settings.ComplicationFeature.HISTORY &&
+                    it != com.example.wear.data.settings.ComplicationFeature.MAINTENANCE
+                }
+                .toList(),
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -114,39 +117,63 @@ fun CircularActionButtons(
     val configuration = LocalConfiguration.current
     val screenSize = configuration.screenWidthDp.dp
     val buttonSize = 30.dp
-    val radius = (screenSize / 2) - (buttonSize / 2) - 4.dp // Position very close to edge
+    val radius = (screenSize / 2) - (buttonSize / 2) - 4.dp
 
-    // Map complications to action buttons with proper ordering
-    val sortedComplications = enabledComplications.sortedBy { complication ->
-        when (complication) {
-            com.example.wear.data.settings.ComplicationFeature.SETTINGS -> 0
-            com.example.wear.data.settings.ComplicationFeature.ALL_MEDS -> 1
-            com.example.wear.data.settings.ComplicationFeature.HISTORY -> 2
-            com.example.wear.data.settings.ComplicationFeature.MAINTENANCE -> 3
-            com.example.wear.data.settings.ComplicationFeature.EMERGENCY -> 4
-            com.example.wear.data.settings.ComplicationFeature.VITALS -> 5
-            com.example.wear.data.settings.ComplicationFeature.UPCOMING -> 6
+    // Filter out history and maintenance, then sort remaining complications
+    val filteredComplications = enabledComplications
+        .filter { 
+            it != com.example.wear.data.settings.ComplicationFeature.HISTORY &&
+            it != com.example.wear.data.settings.ComplicationFeature.MAINTENANCE
         }
-    }
+        .sortedBy { complication ->
+            when (complication) {
+                com.example.wear.data.settings.ComplicationFeature.SETTINGS -> 0
+                com.example.wear.data.settings.ComplicationFeature.ALL_MEDS -> 1
+                com.example.wear.data.settings.ComplicationFeature.EMERGENCY -> 2
+                com.example.wear.data.settings.ComplicationFeature.VITALS -> 3
+                com.example.wear.data.settings.ComplicationFeature.UPCOMING -> 4
+                else -> 5 // Handle any unexpected cases
+            }
+        }
 
-    // Calculate angles for enabled complications
-    val actions = sortedComplications.mapIndexed { index, complication ->
-        val angle = if (sortedComplications.size == 1) {
-            0f // Single button at top
-        } else {
-            // Distribute evenly around circle, starting from top right and going clockwise
-            val step = 360f / sortedComplications.size
-            (360f - (step * index)) % 360f
+    // Calculate angles for symmetrical placement
+    val actions = filteredComplications.mapIndexed { index, complication ->
+        // Distribute buttons symmetrically around the circle
+        val totalButtons = filteredComplications.size
+        val angle = when (totalButtons) {
+            1 -> 90f // Single button at top
+            2 -> if (index == 0) 45f else 315f // Top-right and top-left
+            3 -> when (index) { // Top-right, top-left, and bottom
+                0 -> 30f
+                1 -> 150f
+                else -> 270f
+            }
+            4 -> when (index) { // Top-right, top-left, bottom-left, bottom-right
+                0 -> 45f
+                1 -> 135f
+                2 -> 225f
+                else -> 315f
+            }
+            5 -> when (index) { // Evenly distributed
+                0 -> 18f
+                1 -> 90f
+                2 -> 162f
+                3 -> 234f
+                else -> 306f
+            }
+            else -> { // Default to even distribution
+                val step = 360f / totalButtons
+                (step * index) % 360f
+            }
         }
 
         val icon = when (complication) {
             com.example.wear.data.settings.ComplicationFeature.SETTINGS -> Icons.Default.Settings
             com.example.wear.data.settings.ComplicationFeature.ALL_MEDS -> Icons.Default.HealthAndSafety
-            com.example.wear.data.settings.ComplicationFeature.HISTORY -> Icons.Default.History
-            com.example.wear.data.settings.ComplicationFeature.MAINTENANCE -> Icons.Default.Refresh
             com.example.wear.data.settings.ComplicationFeature.EMERGENCY -> Icons.Default.Warning
             com.example.wear.data.settings.ComplicationFeature.VITALS -> Icons.Default.Favorite
             com.example.wear.data.settings.ComplicationFeature.UPCOMING -> Icons.Default.Notifications
+            else -> Icons.Default.Info // Fallback icon
         }
 
         ActionButton(complication.displayName, icon, angle)

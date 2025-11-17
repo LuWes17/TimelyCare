@@ -45,16 +45,17 @@ fun SettingsScreen(
 
         ScalingLazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 45.dp),
             contentPadding = PaddingValues(
-                top = 32.dp,
+                top = 12.dp,
                 start = 8.dp,
                 end = 8.dp,
-                bottom = 60.dp
+                bottom = 0.dp
             ),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // Header
             item {
                 Text(
                     text = "Settings",
@@ -63,12 +64,11 @@ fun SettingsScreen(
                     color = MaterialTheme.colors.onBackground,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp),
+                        .padding(vertical = 8.dp),
                     textAlign = TextAlign.Center
                 )
             }
 
-            // Text Size Section
             item {
                 Text(
                     text = "Text Size",
@@ -89,7 +89,6 @@ fun SettingsScreen(
                 )
             }
 
-            // Accent Color Section
             item {
                 Text(
                     text = "Accent Color",
@@ -110,7 +109,6 @@ fun SettingsScreen(
                 )
             }
 
-            // Watch Type Section
             item {
                 Text(
                     text = "Watch Type",
@@ -131,7 +129,6 @@ fun SettingsScreen(
                 )
             }
 
-            // Dark Mode Section
             item {
                 DarkModeToggle(
                     isDarkMode = settings.isDarkMode,
@@ -139,7 +136,6 @@ fun SettingsScreen(
                 )
             }
 
-            // Complications Section
             item {
                 Text(
                     text = "Complications",
@@ -162,12 +158,11 @@ fun SettingsScreen(
             }
         }
 
-        // Floating Back Button
         Button(
             onClick = onBackClick,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 12.dp)
+                .padding(bottom = 10.dp)
                 .size(44.dp),
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = MaterialTheme.colors.primary
@@ -226,7 +221,6 @@ private fun AccentColorPicker(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // First row - Green, Blue, Purple
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -239,7 +233,6 @@ private fun AccentColorPicker(
             }
         }
 
-        // Second row - Red, Orange, Pink
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {

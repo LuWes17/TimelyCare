@@ -19,6 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
 import androidx.wear.compose.material.*
 import com.example.wear.EmergencyContact
 import com.example.wear.MedicationRepository
@@ -29,6 +31,7 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
     val medicationRepository = remember { MedicationRepository.getInstance(context) }
     val emergencyContacts by medicationRepository.emergencyContacts.collectAsState()
+    val listState = rememberScalingLazyListState()
 
     var callMessage by remember { mutableStateOf<String?>(null) }
     var fallAlertState by remember { mutableStateOf(FallAlertState.NONE) }
@@ -36,7 +39,6 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
     val primaryContact = medicationRepository.getPrimaryContact()
     val backupContacts = medicationRepository.getBackupContacts()
 
-    // Main unified emergency screen
     if (fallAlertState == FallAlertState.NONE) {
         Box(
             modifier = Modifier
@@ -46,18 +48,21 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
             TimeText()
 
             ScalingLazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 45.dp),
+                anchorType = ScalingLazyListAnchorType.ItemStart,
                 contentPadding = PaddingValues(
-                    top = 42.dp,
+                    top = 12.dp,
                     start = 8.dp,
                     end = 8.dp,
-                    bottom = 60.dp
+                    bottom = 0.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
-                    // Emergency Title
                     Text(
                         text = "Emergency",
                         style = MaterialTheme.typography.title1,
@@ -69,7 +74,6 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                 }
 
                 item {
-                    // Primary Contact Section
                     Text(
                         text = "Primary Contact",
                         style = MaterialTheme.typography.title2,
@@ -80,7 +84,6 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                 }
 
                 item {
-                    // Primary Contact Button
                     primaryContact?.let { contact ->
                         Button(
                             onClick = {
@@ -138,7 +141,6 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                 }
 
                 item {
-                    // Backup Contacts Section Title
                     Text(
                         text = "Backup Contacts",
                         style = MaterialTheme.typography.title2,
@@ -151,7 +153,6 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                     )
                 }
 
-                // Backup Contacts List
                 items(backupContacts) { contact ->
                     EmergencyContactListItem(
                         contact = contact,
@@ -163,9 +164,8 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                 }
 
                 item {
-                    // Fall Detection Section
                     Card(
-                        onClick = { /* No action needed */ },
+                        onClick = { },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp)
@@ -212,7 +212,6 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                 }
 
                 item {
-                    // Simulate Fall Button
                     Button(
                         onClick = {
                             fallAlertState = FallAlertState.DETECTED
@@ -234,17 +233,15 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                 }
             }
 
-            // Back Button
             Button(
                 onClick = onBackClick,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 12.dp)
+                    .padding(bottom = 10.dp)
                     .size(44.dp),
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = MaterialTheme.colors.primary
-                ),
-                shape = CircleShape
+                )
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
@@ -256,7 +253,6 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
         }
     }
 
-    // Fall Alert Screens (only when triggered)
     when (fallAlertState) {
         FallAlertState.DETECTED -> {
             EmergencyFallAlertScreen(
@@ -276,14 +272,12 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
             )
         }
         FallAlertState.NONE -> {
-            // Main screen is already shown above
         }
     }
 
-    // Show call message overlay
     callMessage?.let { message ->
         LaunchedEffect(message) {
-            delay(3000) // Show message for 3 seconds
+            delay(3000)
             callMessage = null
         }
 
@@ -294,7 +288,7 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
             contentAlignment = Alignment.Center
         ) {
             Card(
-                onClick = { /* Dismissible by clicking */ },
+                onClick = { },
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(

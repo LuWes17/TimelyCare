@@ -13,11 +13,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
 import androidx.wear.compose.material.*
+
 import com.example.wear.Medication
 import com.example.wear.MedicationRepository
 
@@ -37,52 +38,23 @@ fun AllMedicationsScreen(
         TimeText()
 
         if (medications.isEmpty()) {
-            // Empty State
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.HealthAndSafety,
-                    contentDescription = "No medications",
-                    tint = MaterialTheme.colors.primary,
-                    modifier = Modifier.size(48.dp)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "No Medications",
-                    style = MaterialTheme.typography.title2,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colors.onBackground,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Add medications from your phone app",
-                    style = MaterialTheme.typography.body2,
-                    color = MaterialTheme.colors.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 24.dp)
-                )
-            }
+            EmptyMedicationState()
         } else {
-            // Medication List
             ScalingLazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 45.dp), // ensures bottom space for back button
+                anchorType = ScalingLazyListAnchorType.ItemStart,
                 contentPadding = PaddingValues(
-                    top = 32.dp,
+                    top = 12.dp,
                     start = 8.dp,
                     end = 8.dp,
-                    bottom = 60.dp
+                    bottom = 0.dp // safe bottom padding
                 ),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp) // Reduced spacing between cards
             ) {
+                // Header
                 item {
                     Text(
                         text = "All Medications",
@@ -91,11 +63,12 @@ fun AllMedicationsScreen(
                         color = MaterialTheme.colors.onBackground,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 16.dp),
+                            .padding(vertical = 8.dp),
                         textAlign = TextAlign.Center
                     )
                 }
 
+                // Medication items
                 items(medications) { medication ->
                     MedicationCard(
                         medication = medication,
@@ -110,7 +83,7 @@ fun AllMedicationsScreen(
             onClick = onBackClick,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 12.dp)
+                .padding(bottom = 10.dp)
                 .size(44.dp),
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = MaterialTheme.colors.primary
@@ -127,32 +100,66 @@ fun AllMedicationsScreen(
 }
 
 @Composable
+private fun EmptyMedicationState() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.HealthAndSafety,
+            contentDescription = "No medications",
+            tint = MaterialTheme.colors.primary,
+            modifier = Modifier.size(48.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "No Medications",
+            style = MaterialTheme.typography.title2,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.onBackground,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Add medications from your phone app",
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
+    }
+}
+
+@Composable
 private fun MedicationCard(
     medication: Medication,
     modifier: Modifier = Modifier
 ) {
     Card(
-        onClick = { /* Future: show medication details */ },
+        onClick = { /* TODO: Add medication action if needed */ },
         modifier = modifier.padding(horizontal = 4.dp),
         enabled = true
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(vertical = 8.dp, horizontal = 8.dp), // Reduced padding
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Health Icon
             Icon(
                 imageVector = Icons.Default.HealthAndSafety,
                 contentDescription = "Medication",
                 tint = MaterialTheme.colors.primary,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(24.dp) // Smaller icon
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp)) // Reduced spacing
 
-            // Medication Name
             Text(
                 text = medication.name,
                 style = MaterialTheme.typography.title3,
@@ -162,41 +169,38 @@ private fun MedicationCard(
                 maxLines = 2
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp)) // Reduced spacing
 
-            // Dosage
             Text(
                 text = "Dosage: ${medication.dosage}",
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.caption1, // Smaller text
                 color = MaterialTheme.colors.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp)) // Reduced spacing
 
-            // Time
             Text(
                 text = medication.time,
-                style = MaterialTheme.typography.body2,
-                color = MaterialTheme.colors.primary,
+                style = MaterialTheme.typography.caption1, // Smaller text
+                color = MaterialTheme.colors.onSurface,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
             )
 
-            // Maintenance Badge
             if (medication.isMaintenanceMed) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp)) // Reduced spacing
 
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colors.primary.copy(alpha = 0.2f))
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(8.dp)) // Smaller corners
+                        .background(MaterialTheme.colors.primary.copy(alpha = 0.25f))
+                        .padding(horizontal = 8.dp, vertical = 2.dp) // Reduced padding
                 ) {
                     Text(
                         text = "Maintenance",
-                        style = MaterialTheme.typography.caption1,
-                        color = MaterialTheme.colors.primary,
+                        style = MaterialTheme.typography.caption2, // Smallest text
+                        color = MaterialTheme.colors.onSurface,
                         fontWeight = FontWeight.Medium
                     )
                 }
