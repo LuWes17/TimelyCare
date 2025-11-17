@@ -45,14 +45,10 @@ fun SettingsScreen(
 
         ScalingLazyColumn(
             state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 45.dp),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = 12.dp,
-                start = 8.dp,
-                end = 8.dp,
-                bottom = 0.dp
+                start = 8.dp
             ),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
