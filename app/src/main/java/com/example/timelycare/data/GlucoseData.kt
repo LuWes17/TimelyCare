@@ -80,34 +80,10 @@ object GlucoseDataGenerator {
         val today = LocalDate.now()
         return listOf(
             HistoricalGlucoseReading(
-                date = today.minusDays(7),
-                displayDate = "Wed, Nov 5",
-                reading = GlucoseReading(98, "Wed", getGlucoseCategory(98))
-            ),
-            HistoricalGlucoseReading(
-                date = today.minusDays(6),
-                displayDate = "Thu, Nov 6",
-                reading = GlucoseReading(101, "Thu", getGlucoseCategory(101))
-            ),
-            HistoricalGlucoseReading(
-                date = today.minusDays(5),
-                displayDate = "Fri, Nov 7",
-                reading = GlucoseReading(108, "Fri", getGlucoseCategory(108))
-            ),
-            HistoricalGlucoseReading(
-                date = today.minusDays(4),
-                displayDate = "Sat, Nov 8",
-                reading = GlucoseReading(97, "Sat", getGlucoseCategory(97))
-            ),
-            HistoricalGlucoseReading(
-                date = today.minusDays(3),
-                displayDate = "Sun, Nov 9",
-                reading = GlucoseReading(104, "Sun", getGlucoseCategory(104))
-            ),
-            HistoricalGlucoseReading(
-                date = today.minusDays(2),
-                displayDate = "Mon, Nov 10",
-                reading = GlucoseReading(111, "Mon", getGlucoseCategory(111))
+                date = today,
+                displayDate = "Today",
+                reading = GlucoseReading(100, "Today", getGlucoseCategory(100)),
+                isToday = true
             ),
             HistoricalGlucoseReading(
                 date = today.minusDays(1),
@@ -115,10 +91,34 @@ object GlucoseDataGenerator {
                 reading = GlucoseReading(95, "Yesterday", getGlucoseCategory(95))
             ),
             HistoricalGlucoseReading(
-                date = today,
-                displayDate = "Today",
-                reading = GlucoseReading(100, "Today", getGlucoseCategory(100)),
-                isToday = true
+                date = today.minusDays(2),
+                displayDate = "Mon, Nov 10",
+                reading = GlucoseReading(111, "Mon", getGlucoseCategory(111))
+            ),
+            HistoricalGlucoseReading(
+                date = today.minusDays(3),
+                displayDate = "Sun, Nov 9",
+                reading = GlucoseReading(104, "Sun", getGlucoseCategory(104))
+            ),
+            HistoricalGlucoseReading(
+                date = today.minusDays(4),
+                displayDate = "Sat, Nov 8",
+                reading = GlucoseReading(97, "Sat", getGlucoseCategory(97))
+            ),
+            HistoricalGlucoseReading(
+                date = today.minusDays(5),
+                displayDate = "Fri, Nov 7",
+                reading = GlucoseReading(108, "Fri", getGlucoseCategory(108))
+            ),
+            HistoricalGlucoseReading(
+                date = today.minusDays(6),
+                displayDate = "Thu, Nov 6",
+                reading = GlucoseReading(101, "Thu", getGlucoseCategory(101))
+            ),
+            HistoricalGlucoseReading(
+                date = today.minusDays(7),
+                displayDate = "Wed, Nov 5",
+                reading = GlucoseReading(98, "Wed", getGlucoseCategory(98))
             )
         )
     }

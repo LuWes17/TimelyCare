@@ -20,6 +20,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.timelycare.R
 import com.example.timelycare.data.*
 import com.example.timelycare.ui.theme.*
 import com.example.timelycare.ui.components.FrequencySelectionModal
@@ -236,8 +238,8 @@ fun AddEditMedicationScreen(
                 medicineName = it
                 if (medicineNameError.isNotEmpty()) medicineNameError = ""
             },
-            label = { Text("Medicine Name *") },
-            placeholder = { Text("e.g., Amoxicillin") },
+            label = { Text(stringResource(R.string.medicine_name)) },
+            placeholder = { Text(stringResource(R.string.medicine_name_placeholder)) },
             isError = medicineNameError.isNotEmpty(),
             supportingText = if (medicineNameError.isNotEmpty()) {
                 { Text(medicineNameError, color = Color.Red) }
@@ -257,8 +259,8 @@ fun AddEditMedicationScreen(
                 dosage = it
                 if (dosageError.isNotEmpty()) dosageError = ""
             },
-            label = { Text("Dosage *") },
-            placeholder = { Text("e.g., 500 mg") },
+            label = { Text(stringResource(R.string.dosage)) },
+            placeholder = { Text(stringResource(R.string.dosage_placeholder)) },
             isError = dosageError.isNotEmpty(),
             supportingText = if (dosageError.isNotEmpty()) {
                 { Text(dosageError, color = Color.Red) }
@@ -540,7 +542,7 @@ fun AddEditMedicationScreen(
         OutlinedTextField(
             value = specialInstructions,
             onValueChange = { specialInstructions = it },
-            placeholder = { Text("Enter any special instructions...") },
+            placeholder = { Text(stringResource(R.string.special_instructions_placeholder)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
@@ -692,14 +694,14 @@ fun AddEditMedicationScreen(
                         showStartDatePicker = false
                     }
                 ) {
-                    Text("OK", color = TimelyCareBlue, fontSize = 16.sp)
+                    Text(stringResource(R.string.ok), color = TimelyCareBlue, fontSize = 16.sp)
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showStartDatePicker = false }
                 ) {
-                    Text("Cancel", color = TimelyCareGray, fontSize = 16.sp)
+                    Text(stringResource(R.string.cancel), color = TimelyCareGray, fontSize = 16.sp)
                 }
             }
         ) {
@@ -732,14 +734,14 @@ fun AddEditMedicationScreen(
                         showEndDatePicker = false
                     }
                 ) {
-                    Text("OK", color = TimelyCareBlue, fontSize = 16.sp)
+                    Text(stringResource(R.string.ok), color = TimelyCareBlue, fontSize = 16.sp)
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showEndDatePicker = false }
                 ) {
-                    Text("Cancel", color = TimelyCareGray, fontSize = 16.sp)
+                    Text(stringResource(R.string.cancel), color = TimelyCareGray, fontSize = 16.sp)
                 }
             }
         ) {

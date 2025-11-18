@@ -7,13 +7,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.timelycare.R
 import com.example.timelycare.data.Frequency
 import com.example.timelycare.data.Medication
 import com.example.timelycare.ui.theme.*
@@ -26,6 +28,7 @@ fun MedicationCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = TimelyCareWhite),
@@ -101,7 +104,7 @@ fun MedicationCard(
 
                     // Delete Button
                     Button(
-                        onClick = onDelete,
+                        onClick = { showDeleteConfirmation = true },
                         modifier = Modifier.size(48.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent
@@ -120,6 +123,43 @@ fun MedicationCard(
                 }
             }
         }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.delete_medication_title),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.delete_medication_confirmation, medication.name)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteConfirmation = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFFE53E3E)
+                    )
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteConfirmation = false }
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 }
 

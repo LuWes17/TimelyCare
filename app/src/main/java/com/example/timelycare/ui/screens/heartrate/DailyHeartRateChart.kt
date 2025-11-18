@@ -155,18 +155,15 @@ private fun HeartRateZoneLegend(
     ) {
         LegendItem(
             color = Color(0xFF38A169), // Green
-            label = "Normal",
-            description = "(≤70)"
+            label = "Normal"
         )
         LegendItem(
             color = Color(0xFFD69E2E), // Yellow
-            label = "Elevated",
-            description = "(71-80)"
+            label = "Elevated"
         )
         LegendItem(
             color = Color(0xFFE53E3E), // Red
-            label = "High",
-            description = "(≥81)"
+            label = "High"
         )
     }
 }
@@ -175,12 +172,11 @@ private fun HeartRateZoneLegend(
 private fun LegendItem(
     color: Color,
     label: String,
-    description: String,
     modifier: Modifier = Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
     ) {
         Box(
@@ -189,19 +185,12 @@ private fun LegendItem(
                 .clip(RoundedCornerShape(2.dp))
                 .background(color)
         )
-        Column {
-            Text(
-                text = label,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = TimelyCareTextPrimary
-            )
-            Text(
-                text = description,
-                fontSize = 10.sp,
-                color = TimelyCareTextSecondary
-            )
-        }
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = TimelyCareTextSecondary
+        )
     }
 }
 

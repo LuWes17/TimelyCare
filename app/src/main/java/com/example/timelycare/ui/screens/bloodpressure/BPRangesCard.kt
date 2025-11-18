@@ -42,13 +42,6 @@ fun BPRangesCard(
                     fontWeight = FontWeight.Bold,
                     color = TimelyCareTextPrimary
                 )
-
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Details",
-                    tint = TimelyCareTextSecondary,
-                    modifier = Modifier.size(20.dp)
-                )
             }
 
             Row(

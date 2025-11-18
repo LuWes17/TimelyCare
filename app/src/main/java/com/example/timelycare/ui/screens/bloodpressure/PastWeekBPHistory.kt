@@ -1,11 +1,15 @@
 package com.example.timelycare.ui.screens.bloodpressure
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,15 +33,26 @@ fun PastWeekBPHistory(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Past Week",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = TimelyCareTextPrimary
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Past week",
+                    tint = TimelyCareBlue,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = "Past Week",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TimelyCareTextPrimary
+                )
+            }
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 historicalReadings.forEach { reading ->
                     BPHistoryItem(reading = reading)
@@ -52,34 +67,57 @@ private fun BPHistoryItem(
     reading: HistoricalBPReading,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = reading.displayDate,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = TimelyCareTextPrimary,
-            modifier = Modifier.weight(1f)
-        )
+    val isToday = reading.displayDate == "Today"
 
+    val cardModifier = if (isToday) {
+        modifier
+            .fillMaxWidth()
+            .border(
+                width = 2.dp,
+                color = TimelyCareBlue,
+                shape = RoundedCornerShape(8.dp)
+            )
+    } else {
+        modifier.fillMaxWidth()
+    }
+
+    Surface(
+        modifier = cardModifier,
+        color = if (isToday) TimelyCareBlue.copy(alpha = 0.05f) else TimelyCareWhite,
+        shape = RoundedCornerShape(8.dp),
+        shadowElevation = if (isToday) 0.dp else 1.dp
+    ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = reading.reading.reading,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = TimelyCareTextPrimary
+                text = reading.displayDate,
+                fontSize = 14.sp,
+                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
+                color = if (isToday) TimelyCareBlue else TimelyCareTextPrimary,
+                modifier = Modifier.weight(1f)
             )
 
-            StatusIndicator(
-                status = reading.reading.overallCategory.displayName,
-                color = getBPCategoryColor(reading.reading.overallCategory)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = reading.reading.reading,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isToday) TimelyCareBlue else TimelyCareTextPrimary
+                )
+
+                StatusIndicator(
+                    status = reading.reading.overallCategory.displayName,
+                    color = getBPCategoryColor(reading.reading.overallCategory)
+                )
+            }
         }
     }
 }

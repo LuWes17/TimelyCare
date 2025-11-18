@@ -58,11 +58,11 @@ fun TimelyCareTheme(
 
     // Map theme color index to accent palette (order must match SettingsScreen)
     val accentPalettes = listOf<Triple<Color, Color, Color>>(
-        Triple(Color(0xFF4285F4), Color(0xFF6DA4F7), Color(0xFF0D47A1)), // Blue
-        Triple(Color(0xFFD64545), Color(0xFFE57373), Color(0xFFB71C1C)), // Red
-        Triple(Color(0xFF2F9F5B), Color(0xFF66BB6A), Color(0xFF1B5E20)), // Green
-        Triple(Color(0xFF7A4EDB), Color(0xFF9575CD), Color(0xFF4527A0)), // Purple
-        Triple(Color(0xFFED873F), Color(0xFFFFB74D), Color(0xFFE65100)), // Orange
+        Triple(Color(0xFF00C853), Color(0xFF4CAF50), Color(0xFF2E7D32)), // Green
+        Triple(Color(0xFF2196F3), Color(0xFF64B5F6), Color(0xFF1565C0)), // Blue
+        Triple(Color(0xFF9C27B0), Color(0xFFBA68C8), Color(0xFF6A1B9A)), // Purple
+        Triple(Color(0xFFF44336), Color(0xFFE57373), Color(0xFFB71C1C)), // Red
+        Triple(Color(0xFFFF9800), Color(0xFFFFB74D), Color(0xFFE65100)), // Orange
         Triple(Color(0xFFE91E63), Color(0xFFF06292), Color(0xFFC2185B))  // Pink
     )
     val accent = accentPalettes.getOrElse(settings.themeColorIndex) { accentPalettes.first() }

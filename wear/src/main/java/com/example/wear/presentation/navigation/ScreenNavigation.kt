@@ -6,8 +6,6 @@ import com.example.wear.data.settings.SettingsRepository
 import com.example.wear.presentation.screens.*
 import com.example.wear.presentation.screens.emergency.EmergencyScreen
 import com.example.wear.presentation.screens.vitals.VitalsScreen
-import com.example.wear.presentation.screens.medications.HistoryScreen
-import com.example.wear.presentation.screens.medications.MaintenanceScreen
 import com.example.wear.presentation.screens.medications.UpcomingScreen
 import com.example.wear.presentation.theme.TimelyCareTheme
 
@@ -15,8 +13,6 @@ enum class Screen {
     HOME,
     SETTINGS,
     ALL_MEDS,
-    HISTORY,
-    MAINTENANCE,
     EMERGENCY,
     VITALS,
     UPCOMING
@@ -43,8 +39,6 @@ fun AppNavigation() {
                         currentScreen = when (screenName) {
                             "Settings" -> Screen.SETTINGS
                             "All Meds" -> Screen.ALL_MEDS
-                            "History" -> Screen.HISTORY
-                            "Maintenance" -> Screen.MAINTENANCE
                             "Emergency" -> Screen.EMERGENCY
                             "Vitals" -> Screen.VITALS
                             "Upcoming" -> Screen.UPCOMING
@@ -62,17 +56,6 @@ fun AppNavigation() {
             }
             Screen.ALL_MEDS -> {
                 AllMedicationsScreen(
-                    onBackClick = { currentScreen = Screen.HOME },
-                    medicationRepository = medicationRepository
-                )
-            }
-            Screen.HISTORY -> {
-                HistoryScreen(
-                    onBackClick = { currentScreen = Screen.HOME }
-                )
-            }
-            Screen.MAINTENANCE -> {
-                MaintenanceScreen(
                     onBackClick = { currentScreen = Screen.HOME },
                     medicationRepository = medicationRepository
                 )

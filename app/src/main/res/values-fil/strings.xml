@@ -1,0 +1,73 @@
+<resources>
+    <string name="app_name">TimelyCare</string>
+
+    <!-- Navigation and General -->
+    <string name="back">Bumalik</string>
+    <string name="settings">Mga Setting</string>
+    <string name="cancel">Kanselahin</string>
+    <string name="ok">OK</string>
+    <string name="delete">Tanggalin</string>
+    <string name="save_settings">I-save ang mga Setting</string>
+    <string name="settings_saved_successfully">Matagumpay na na-save ang mga setting!</string>
+
+    <!-- Settings Screen -->
+    <string name="language">Wika</string>
+    <string name="preferred_language">Napiling wika</string>
+    <string name="theme_color">Kulay ng Theme</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="dark_mode_description">Lumipat sa liwanag at madilim na tema</string>
+    <string name="alert_sensitivity">Sensitivity ng Alert</string>
+    <string name="notification_level">Level ng notification</string>
+
+    <!-- Theme Colors -->
+    <string name="green">Berde</string>
+    <string name="blue">Asul</string>
+    <string name="purple">Lila</string>
+    <string name="red">Pula</string>
+    <string name="orange">Kahel</string>
+    <string name="pink">Rosas</string>
+
+    <!-- Alert Levels -->
+    <string name="alert_level_low">Mababang</string>
+    <string name="alert_level_low_description">Banayad na vibration, kaunting alerts</string>
+    <string name="alert_level_normal">Normal</string>
+    <string name="alert_level_normal_description">Standard na alerts</string>
+    <string name="alert_level_high">Mataas</string>
+    <string name="alert_level_high_description">Malakas na vibration, madalas na alerts</string>
+
+    <!-- Languages -->
+    <string name="english">English</string>
+    <string name="filipino">Filipino</string>
+
+    <!-- Contact Management -->
+    <string name="contact">Contact</string>
+    <string name="contact_form">Form ng contact</string>
+    <string name="add_contact">Magdagdag ng Contact</string>
+    <string name="edit_contact">I-edit ang Contact</string>
+    <string name="update_contact">I-update ang Contact</string>
+    <string name="select_from_phonebook">Pumili mula sa Phonebook</string>
+    <string name="contact_name">Pangalan ng contact *</string>
+    <string name="phone_number">Numero ng telepono *</string>
+    <string name="edit_contact_desc">I-edit ang contact</string>
+    <string name="delete_contact_desc">Tanggalin ang contact</string>
+    <string name="delete_contact_title">Tanggalin ang Contact</string>
+    <string name="delete_contact_confirmation">Sigurado ka bang gusto mong tanggalin si %1$s sa inyong mga emergency contacts?</string>
+    <string name="delete_medication_title">Tanggalin ang Gamot</string>
+    <string name="delete_medication_confirmation">Sigurado ka bang gusto mong tanggalin ang %1$s sa inyong mga gamot?</string>
+
+    <!-- Contact Validation Messages -->
+    <string name="contact_name_required">Kinakailangan ang pangalan ng contact</string>
+    <string name="name_min_length">Ang pangalan ay dapat na hindi bababa sa 2 karakter</string>
+    <string name="phone_number_required">Kinakailangan ang numero ng telepono</string>
+    <string name="phone_min_length">Ang numero ng telepono ay dapat na hindi bababa sa 7 digits</string>
+    <string name="phone_digits_only">Ang numero ng telepono ay dapat na mga numero lamang</string>
+    <string name="phone_number_exists">Umiiral na ang numerong ito</string>
+
+    <!-- Medications -->
+    <string name="medicine_name">Pangalan ng Gamot *</string>
+    <string name="medicine_name_placeholder">hal., Amoxicillin</string>
+    <string name="dosage">Dosage *</string>
+    <string name="dosage_placeholder">hal., 500 mg</string>
+    <string name="special_instructions_placeholder">Maglagay ng mga espesyal na tagubilin...</string>
+
+</resources>

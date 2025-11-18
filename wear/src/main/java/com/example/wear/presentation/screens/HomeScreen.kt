@@ -123,12 +123,8 @@ fun HomeScreen(
         // --- 3. Circular Action Buttons Layer (Top Layer) ---
         CircularActionButtons(
             onNavigateToScreen = onNavigateToScreen,
-            enabledComplications = settings.enabledComplications
-                .filter {
-                    it != com.example.wear.data.settings.ComplicationFeature.HISTORY &&
-                            it != com.example.wear.data.settings.ComplicationFeature.MAINTENANCE
-                }
-                .toList(),
+            enabledComplications = settings.enabledComplications.toList(),
+            watchType = settings.watchType,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -226,6 +222,7 @@ private fun AnalogWatchFace(
 fun CircularActionButtons(
     onNavigateToScreen: (String) -> Unit,
     enabledComplications: List<com.example.wear.data.settings.ComplicationFeature>,
+    watchType: WatchType,
     modifier: Modifier = Modifier
 ) {
     val configuration = LocalConfiguration.current
@@ -233,12 +230,8 @@ fun CircularActionButtons(
     val buttonSize = 30.dp
     val radius = (screenSize / 2) - (buttonSize / 2) - 4.dp
 
-    // Filter out history and maintenance, then sort remaining complications
+    // Sort complications for proper display order
     val filteredComplications = enabledComplications
-        .filter { 
-            it != com.example.wear.data.settings.ComplicationFeature.HISTORY &&
-            it != com.example.wear.data.settings.ComplicationFeature.MAINTENANCE
-        }
         .sortedBy { complication ->
             when (complication) {
                 com.example.wear.data.settings.ComplicationFeature.SETTINGS -> 0
@@ -250,34 +243,67 @@ fun CircularActionButtons(
             }
         }
 
-    // Calculate angles for symmetrical placement
+    // Calculate angles based on watch type
     val actions = filteredComplications.mapIndexed { index, complication ->
-        // Distribute buttons symmetrically around the circle
         val totalButtons = filteredComplications.size
-        val angle = when (totalButtons) {
-            1 -> 90f // Single button at top
-            2 -> if (index == 0) 45f else 315f // Top-right and top-left
-            3 -> when (index) { // Top-right, top-left, and bottom
-                0 -> 30f
-                1 -> 150f
-                else -> 270f
+
+        val angle = if (watchType == WatchType.DIGITAL) {
+            // Digital watch: mouth curve pattern at bottom (200° to 340°)
+            when (totalButtons) {
+                1 -> 270f // Single button at bottom center
+                2 -> if (index == 0) 110f else 70f // Two buttons spread along curve
+                3 -> when (index) { // Three evenly spaced along curve
+                    0 -> 130f
+                    1 -> 90f
+                    else -> 50f
+                }
+                4 -> when (index) { // Four along curve with good spacing
+                    0 -> 150f
+                    1 -> 110f
+                    2 -> 70f
+                    else -> 30f
+                }
+                5 -> when (index) { // Five along curve
+                    0 -> 170f
+                    1 -> 130f
+                    2 -> 90f
+                    3 -> 50f
+                    else -> 10f
+                }
+                else -> { // More than 5: distribute evenly along 140-degree arc
+                    val startAngle = 200f
+                    val endAngle = 340f
+                    val step = (endAngle - startAngle) / (totalButtons - 1)
+                    startAngle + (step * index)
+                }
             }
-            4 -> when (index) { // Top-right, top-left, bottom-left, bottom-right
-                0 -> 45f
-                1 -> 135f
-                2 -> 225f
-                else -> 315f
-            }
-            5 -> when (index) { // Evenly distributed
-                0 -> 18f
-                1 -> 90f
-                2 -> 162f
-                3 -> 234f
-                else -> 306f
-            }
-            else -> { // Default to even distribution
-                val step = 360f / totalButtons
-                (step * index) % 360f
+        } else {
+            // Analog watch: keep existing full circle distribution
+            when (totalButtons) {
+                1 -> 90f // Single button at top
+                2 -> if (index == 0) 45f else 315f // Top-right and top-left
+                3 -> when (index) { // Top-right, top-left, and bottom
+                    0 -> 30f
+                    1 -> 150f
+                    else -> 270f
+                }
+                4 -> when (index) { // Top-right, top-left, bottom-left, bottom-right
+                    0 -> 45f
+                    1 -> 135f
+                    2 -> 225f
+                    else -> 315f
+                }
+                5 -> when (index) { // Evenly distributed
+                    0 -> 18f
+                    1 -> 90f
+                    2 -> 162f
+                    3 -> 234f
+                    else -> 306f
+                }
+                else -> { // Default to even distribution
+                    val step = 360f / totalButtons
+                    (step * index) % 360f
+                }
             }
         }
 

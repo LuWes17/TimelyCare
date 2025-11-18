@@ -1,11 +1,10 @@
 package com.example.timelycare.ui.screens.heartrate
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,18 +36,17 @@ fun PastWeekHistory(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Home,
+                    imageVector = Icons.Default.Star,
                     contentDescription = "Past week",
-                    tint = Color(0xFF38A169),
-                    modifier = Modifier.size(24.dp)
+                    tint = TimelyCareBlue,
+                    modifier = Modifier.size(20.dp)
                 )
-
                 Text(
                     text = "Past Week",
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = TimelyCareTextPrimary
                 )
@@ -58,7 +56,7 @@ fun PastWeekHistory(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 historicalReadings.forEach { reading ->
-                    HistoricalReadingItem(reading = reading)
+                    HeartRateHistoryItem(reading = reading)
                 }
             }
         }
@@ -66,28 +64,29 @@ fun PastWeekHistory(
 }
 
 @Composable
-private fun HistoricalReadingItem(
+private fun HeartRateHistoryItem(
     reading: HistoricalReading,
     modifier: Modifier = Modifier
 ) {
     val isToday = reading.displayDate == "Today"
 
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isToday) {
-                TimelyCareBlue.copy(alpha = 0.1f)
-            } else {
-                Color(0xFFF8F9FA)
-            }
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isToday) 2.dp else 1.dp
-        ),
+    val cardModifier = if (isToday) {
+        modifier
+            .fillMaxWidth()
+            .border(
+                width = 2.dp,
+                color = TimelyCareBlue,
+                shape = RoundedCornerShape(8.dp)
+            )
+    } else {
+        modifier.fillMaxWidth()
+    }
+
+    Surface(
+        modifier = cardModifier,
+        color = if (isToday) TimelyCareBlue.copy(alpha = 0.05f) else TimelyCareWhite,
         shape = RoundedCornerShape(8.dp),
-        border = if (isToday) {
-            androidx.compose.foundation.BorderStroke(1.dp, TimelyCareBlue.copy(alpha = 0.3f))
-        } else null
+        shadowElevation = if (isToday) 0.dp else 1.dp
     ) {
         Row(
             modifier = Modifier
@@ -98,32 +97,50 @@ private fun HistoricalReadingItem(
         ) {
             Text(
                 text = reading.displayDate,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
-                color = if (isToday) TimelyCareBlue else TimelyCareTextPrimary
+                color = if (isToday) TimelyCareBlue else TimelyCareTextPrimary,
+                modifier = Modifier.weight(1f)
             )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     text = "${reading.bpm}",
-                    fontSize = 20.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TimelyCareTextPrimary
+                    color = if (isToday) TimelyCareBlue else TimelyCareTextPrimary
                 )
 
-                Text(
-                    text = "BPM",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = getZoneTextColor(reading.zone),
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                StatusIndicator(
+                    status = "BPM",
+                    color = getZoneTextColor(reading.zone)
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun StatusIndicator(
+    status: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        color = color.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Text(
+            text = status,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = color,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
     }
 }
 

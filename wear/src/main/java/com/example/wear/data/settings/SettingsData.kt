@@ -25,8 +25,6 @@ enum class WatchType(val displayName: String) {
 enum class ComplicationFeature(val displayName: String, val isAlwaysEnabled: Boolean = false) {
     SETTINGS("Settings", true),
     ALL_MEDS("All Meds", true),
-    HISTORY("History"),
-    MAINTENANCE("Maintenance"),
     EMERGENCY("Emergency"),
     VITALS("Vitals"),
     UPCOMING("Upcoming")

@@ -110,13 +110,13 @@ fun HeartRateScreen(
                 items = dateNavItems,
                 selectedIndex = selectedNavIndex,
                 onPrevious = {
-                    if (selectedNavIndex < dateNavItems.lastIndex) {
-                        selectedNavIndex++
+                    if (selectedNavIndex > 0) {
+                        selectedNavIndex--
                     }
                 },
                 onNext = {
-                    if (selectedNavIndex > 0) {
-                        selectedNavIndex--
+                    if (selectedNavIndex < dateNavItems.lastIndex) {
+                        selectedNavIndex++
                     }
                 }
             )
@@ -199,7 +199,7 @@ private fun DateNavigationCard(
         ) {
             IconButton(
                 onClick = onPrevious,
-                enabled = hasItems && selectedIndex < items.lastIndex
+                enabled = hasItems && selectedIndex > 0
             ) {
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowLeft,
@@ -228,7 +228,7 @@ private fun DateNavigationCard(
 
             IconButton(
                 onClick = onNext,
-                enabled = hasItems && selectedIndex > 0
+                enabled = hasItems && selectedIndex < items.lastIndex
             ) {
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowRight,

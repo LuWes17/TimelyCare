@@ -8,10 +8,11 @@ data class EmergencyContact(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
     val phone: String,
+    val relationship: String,
     val countryCode: String = "+63"
 ) {
     val fullPhoneNumber: String
-        get() = "$countryCode $phone"
+        get() = "+63 $phone"
 }
 
 data class CountryCode(

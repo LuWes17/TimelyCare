@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -103,8 +102,8 @@ fun HealthMetricCard(
 private fun getHealthMetricIcon(iconType: HealthMetricIcon): ImageVector {
     return when (iconType) {
         HealthMetricIcon.HEART_RATE -> Icons.Default.FavoriteBorder
-        HealthMetricIcon.BLOOD_PRESSURE -> Icons.Default.Favorite
-        HealthMetricIcon.GLUCOSE -> Icons.Default.FavoriteBorder // Using same icon, will be styled differently
+        HealthMetricIcon.BLOOD_PRESSURE -> Icons.Default.FavoriteBorder
+        HealthMetricIcon.GLUCOSE -> Icons.Default.FavoriteBorder
     }
 }
 

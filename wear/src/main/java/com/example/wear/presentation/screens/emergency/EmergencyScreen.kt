@@ -180,12 +180,13 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(2.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = androidx . compose . ui . Modifier.weight(1f)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Warning,
@@ -193,19 +194,21 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                                     tint = MaterialTheme.colors.primary,
                                     modifier = Modifier.size(24.dp)
                                 )
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.width(2.dp))
                                 Text(
                                     text = "Fall Detection",
                                     style = MaterialTheme.typography.title3,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colors.onSurface
+                                    color = MaterialTheme.colors.onSurface,
+                                    maxLines = 2
                                 )
                             }
                             Text(
                                 text = "Active",
                                 style = MaterialTheme.typography.body2,
                                 color = MaterialTheme.colors.primary,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(start = 8.dp)
                             )
                         }
                     }
@@ -218,7 +221,12 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
+                            .padding(horizontal = 5.dp)
+                            .border(
+                            width = 2.dp,
+                            color = MaterialTheme.colors.primary,
+                            shape = RoundedCornerShape(24.dp)
+                        ),
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = MaterialTheme.colors.surface
                         ),

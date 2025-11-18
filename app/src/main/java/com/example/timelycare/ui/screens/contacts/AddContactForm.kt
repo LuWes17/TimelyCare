@@ -13,8 +13,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
-import com.example.timelycare.data.CountryCode
-import com.example.timelycare.data.CountryCodes
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
+import com.example.timelycare.R
 import com.example.timelycare.data.EmergencyContact
 import com.example.timelycare.ui.theme.*
 
@@ -29,23 +30,17 @@ fun AddContactForm(
     modifier: Modifier = Modifier
 ) {
     var name by remember(editingContact) { mutableStateOf(editingContact?.name ?: "") }
-    var selectedCountryCode by remember(editingContact) {
-        mutableStateOf(
-            if (editingContact != null) {
-                CountryCodes.all.find { it.code == editingContact.countryCode } ?: CountryCodes.PHILIPPINES
-            } else {
-                CountryCodes.PHILIPPINES
-            }
-        )
+    var phone by remember(editingContact) {
+        mutableStateOf(editingContact?.phone ?: "")
     }
-    var phone by remember(editingContact, selectedCountryCode) {
-        mutableStateOf(
-            editingContact?.phone?.let { sanitizePhoneNumberInput(it, selectedCountryCode) } ?: ""
-        )
+    var relationship by remember(editingContact) {
+        mutableStateOf(editingContact?.relationship ?: "")
     }
 
     var nameError by remember { mutableStateOf("") }
     var phoneError by remember { mutableStateOf("") }
+    var relationshipError by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     fun validateForm(): Boolean {
         var isValid = true
@@ -53,11 +48,11 @@ fun AddContactForm(
         nameError = when {
             name.isBlank() -> {
                 isValid = false
-                "Contact name is required"
+                context.getString(R.string.contact_name_required)
             }
             name.length < 2 -> {
                 isValid = false
-                "Name must be at least 2 characters"
+                context.getString(R.string.name_min_length)
             }
             else -> ""
         }
@@ -65,19 +60,31 @@ fun AddContactForm(
         phoneError = when {
             phone.isBlank() -> {
                 isValid = false
-                "Phone number is required"
+                context.getString(R.string.phone_number_required)
             }
-            phone.length < 7 -> {
+            phone.length != 10 -> {
                 isValid = false
-                "Phone number must be at least 7 digits"
+                "Phone number must be exactly 10 digits"
             }
             !phone.all { it.isDigit() } -> {
                 isValid = false
-                "Phone number must contain only digits"
+                context.getString(R.string.phone_digits_only)
             }
             isPhoneNumberExists(phone) -> {
                 isValid = false
-                "This phone number already exists"
+                context.getString(R.string.phone_number_exists)
+            }
+            else -> ""
+        }
+
+        relationshipError = when {
+            relationship.isBlank() -> {
+                isValid = false
+                "Relationship is required"
+            }
+            relationship.length < 2 -> {
+                isValid = false
+                "Relationship must be at least 2 characters"
             }
             else -> ""
         }
@@ -100,7 +107,7 @@ fun AddContactForm(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = if (editingContact != null) "Edit Contact" else "Add Contact",
+                    text = if (editingContact != null) stringResource(R.string.edit_contact) else stringResource(R.string.add_contact),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = TimelyCareTextPrimary
@@ -108,7 +115,7 @@ fun AddContactForm(
 
                 Icon(
                     imageVector = Icons.Default.Person,
-                    contentDescription = "Contact form",
+                    contentDescription = stringResource(R.string.contact_form),
                     tint = TimelyCareBlue,
                     modifier = Modifier.size(24.dp)
                 )
@@ -121,7 +128,7 @@ fun AddContactForm(
                     name = it
                     nameError = ""
                 },
-                label = { Text("Contact name *") },
+                label = { Text(stringResource(R.string.contact_name)) },
                 isError = nameError.isNotEmpty(),
                 supportingText = if (nameError.isNotEmpty()) {
                     { Text(nameError, color = MaterialTheme.colorScheme.error) }
@@ -136,27 +143,51 @@ fun AddContactForm(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Country code dropdown
-            CountryCodeDropdown(
-                selectedCountryCode = selectedCountryCode,
-                onCountryCodeSelected = {
-                    selectedCountryCode = it
-                    phone = sanitizePhoneNumberInput(phone, it)
-                }
-            )
 
             // Phone number field
             OutlinedTextField(
                 value = phone,
-                onValueChange = {
-                    phone = sanitizePhoneNumberInput(it, selectedCountryCode)
+                onValueChange = { newValue ->
+                    val digitsOnly = newValue.filter { it.isDigit() }.take(10)
+                    phone = digitsOnly
                     phoneError = ""
                 },
-                label = { Text("Phone number *") },
+                label = { Text("Phone Number") },
+                placeholder = { Text("9123456789") },
+                leadingIcon = {
+                    Text(
+                        text = "+63 ",
+                        color = TimelyCareTextPrimary,
+                        fontWeight = FontWeight.Medium
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 isError = phoneError.isNotEmpty(),
                 supportingText = if (phoneError.isNotEmpty()) {
                     { Text(phoneError, color = MaterialTheme.colorScheme.error) }
+                } else null,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = TimelyCareBlue,
+                    unfocusedBorderColor = TimelyCareGray,
+                    focusedTextColor = TimelyCareTextPrimary,
+                    unfocusedTextColor = TimelyCareTextPrimary
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Relationship field
+            OutlinedTextField(
+                value = relationship,
+                onValueChange = {
+                    relationship = it
+                    relationshipError = ""
+                },
+                label = { Text("Relationship") },
+                placeholder = { Text("e.g., Father, Mother, Friend") },
+                isError = relationshipError.isNotEmpty(),
+                supportingText = if (relationshipError.isNotEmpty()) {
+                    { Text(relationshipError, color = MaterialTheme.colorScheme.error) }
                 } else null,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = TimelyCareBlue,
@@ -179,7 +210,7 @@ fun AddContactForm(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
 
                     Button(
@@ -189,7 +220,7 @@ fun AddContactForm(
                                     editingContact.copy(
                                         name = name.trim(),
                                         phone = phone,
-                                        countryCode = selectedCountryCode.code
+                                        relationship = relationship.trim()
                                     )
                                 )
                             }
@@ -201,7 +232,7 @@ fun AddContactForm(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = "Update Contact",
+                            text = stringResource(R.string.update_contact),
                             color = TimelyCareWhite,
                             fontWeight = FontWeight.Medium
                         )
@@ -218,12 +249,12 @@ fun AddContactForm(
                                     EmergencyContact(
                                         name = name.trim(),
                                         phone = phone,
-                                        countryCode = selectedCountryCode.code
+                                        relationship = relationship.trim()
                                     )
                                 )
                                 name = ""
                                 phone = ""
-                                selectedCountryCode = CountryCodes.PHILIPPINES
+                                relationship = ""
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
@@ -233,7 +264,7 @@ fun AddContactForm(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Add Contact",
+                            text = stringResource(R.string.add_contact),
                             color = TimelyCareWhite,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(4.dp)
@@ -246,7 +277,7 @@ fun AddContactForm(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Select from Phonebook",
+                            text = stringResource(R.string.select_from_phonebook),
                             color = TimelyCareBlue,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(4.dp)
@@ -258,10 +289,3 @@ fun AddContactForm(
     }
 }
 
-private fun sanitizePhoneNumberInput(rawInput: String, countryCode: CountryCode): String {
-    val digitsOnly = rawInput.filter { it.isDigit() }
-    if (countryCode.code == CountryCodes.PHILIPPINES.code && digitsOnly.length > 1 && digitsOnly.first() == '0') {
-        return digitsOnly.drop(1)
-    }
-    return digitsOnly
-}

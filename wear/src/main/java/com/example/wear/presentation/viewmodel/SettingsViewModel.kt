@@ -53,8 +53,6 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
             when (it) {
                 ComplicationFeature.SETTINGS -> 0
                 ComplicationFeature.ALL_MEDS -> 1
-                ComplicationFeature.HISTORY -> 2
-                ComplicationFeature.MAINTENANCE -> 3
                 ComplicationFeature.EMERGENCY -> 4
                 ComplicationFeature.VITALS -> 5
                 ComplicationFeature.UPCOMING -> 6
