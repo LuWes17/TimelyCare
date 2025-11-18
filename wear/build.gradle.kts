@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.androidx.watchface.complications.data.source.ktx)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.geometry)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
