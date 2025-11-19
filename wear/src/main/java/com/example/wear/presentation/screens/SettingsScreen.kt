@@ -47,7 +47,7 @@ fun SettingsScreen(
             state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
-                top = 12.dp,
+                top = 0.dp,
                 start = 8.dp
             ),
             verticalArrangement = Arrangement.spacedBy(4.dp)

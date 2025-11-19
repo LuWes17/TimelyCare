@@ -1,34 +1,35 @@
 package com.example.wear.presentation.screens.vitals
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Insights
-import androidx.compose.material.icons.filled.MonitorHeart
-import androidx.compose.material.icons.filled.Thermostat
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
+import kotlinx.coroutines.launch
+import com.example.wear.presentation.screens.common.SimpleGraph
 
-// --- CONFIGURATION CONSTANTS (Tuned for Visual Sector Look) ---
-private val BUTTON_SIZE = 150.dp
-private val DIAGONAL_OFFSET = 55.dp
-private val BACK_BUTTON_SIZE = 70.dp
-private val CORNER_RADIUS = 50.dp
+enum class VitalScreen {
+    OVERVIEW, HEART_RATE, BLOOD_PRESSURE, BLOOD_GLUCOSE
+}
 
-// --- THE VITALS MENU SCREEN (Diagonal Layout) ---
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun VitalsScreen(
     onHeartClick: () -> Unit,
@@ -37,116 +38,375 @@ fun VitalsScreen(
     onGlucoseClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
+    val vitalsRepository = rememberVitalsRepository()
+    val vitalsOverview by vitalsRepository.vitalsOverview.collectAsState()
+    val heartRate by vitalsRepository.heartRate.collectAsState()
+    val bloodPressure by vitalsRepository.bloodPressure.collectAsState()
+    val bloodGlucose by vitalsRepository.bloodGlucose.collectAsState()
+
+    val pagerState = rememberPagerState(pageCount = { 4 })
+    val coroutineScope = rememberCoroutineScope()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            // Setting the background explicitly to White for the light aesthetic
             .background(MaterialTheme.colors.background),
         contentAlignment = Alignment.Center
     ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            when (page) {
+                0 -> VitalsOverviewPage(vitalsOverview)
+                1 -> HeartRatePage(heartRate)
+                2 -> BloodPressurePage(bloodPressure)
+                3 -> BloodGlucosePage(bloodGlucose)
+            }
+        }
 
-        // 1. Heart button (Top-Left Quadrant)
-        ThemeRadialButton(
-            label = "Heart",
-            icon = Icons.Default.Favorite,
-            modifier = Modifier.offset(x = -DIAGONAL_OFFSET, y = -DIAGONAL_OFFSET),
-            onClick = onHeartClick
-        )
+        // Left arrow (only show if not on first page)
+        if (pagerState.currentPage > 0) {
+            Icon(
+                imageVector = Icons.Default.ChevronLeft,
+                contentDescription = "Previous",
+                tint = Color(0xFF4CAF50),
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .offset(x = 20.dp)
+                    .size(24.dp)
+            )
+        }
 
-        // 2. Temperature button (Top-Right Quadrant)
-        ThemeRadialButton(
-            label = "Temp",
-            icon = Icons.Default.Thermostat,
-            modifier = Modifier.offset(x = DIAGONAL_OFFSET, y = -DIAGONAL_OFFSET),
-            onClick = onTempClick
-        )
+        // Right arrow (only show if not on last page)
+        if (pagerState.currentPage < 3) {
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = "Next",
+                tint = Color(0xFF4CAF50),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .offset(x = (-20).dp)
+                    .size(24.dp)
+            )
+        }
 
-        // 3. Blood Pressure button (Bottom-Left Quadrant)
-        ThemeRadialButton(
-            label = "BP",
-            icon = Icons.Default.MonitorHeart,
-            modifier = Modifier.offset(x = -DIAGONAL_OFFSET, y = DIAGONAL_OFFSET),
-            onClick = onBpClick
-        )
-
-        // 4. Glucose button (Bottom-Right Quadrant)
-        ThemeRadialButton(
-            label = "Glucose",
-            icon = Icons.Default.Insights,
-            modifier = Modifier.offset(x = DIAGONAL_OFFSET, y = DIAGONAL_OFFSET),
-            onClick = onGlucoseClick
-        )
-
-        // Center Back button
-        ThemeBackCenterButton(onBackClick)
-    }
-}
-
-// --- THEME-BASED COMPONENTS ---
-
-@Composable
-fun ThemeRadialButton(
-    label: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    // Primary color is used for the icon's tint
-    val iconColor = MaterialTheme.colors.primary
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(BUTTON_SIZE)
-            // No border
-            .background(Color.Transparent, shape = RoundedCornerShape(CORNER_RADIUS))
-            .clickable { onClick() }
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+        // Floating Back Button - Consistent with AllMedicationsScreen
+        Button(
+            onClick = onBackClick,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.Center
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 10.dp)
+                .size(44.dp),
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = MaterialTheme.colors.primary
+            )
         ) {
             Icon(
-                imageVector = icon,
-                contentDescription = label,
-                modifier = Modifier.size(32.dp),
-                tint = iconColor // Themed Icon Color
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = MaterialTheme.colors.onPrimary,
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            // Text color set to DarkGray for visibility against the White background
-            Text(text = label, color = Color.DarkGray, fontSize = 14.sp)
         }
     }
 }
 
 @Composable
-fun ThemeBackCenterButton(onClick: () -> Unit) {
-    val borderColor = MaterialTheme.colors.primary
-
-    Box(
+fun VitalsOverviewPage(vitalsOverview: VitalsOverview) {
+    ScalingLazyColumn(
         modifier = Modifier
-            .size(BACK_BUTTON_SIZE)
-            .background(
-                color = MaterialTheme.colors.primary,
-                shape = CircleShape
+            .fillMaxSize()
+            .padding(horizontal = 12.dp),
+        anchorType = ScalingLazyListAnchorType.ItemStart,
+        contentPadding = PaddingValues(
+            top = 0.dp,
+            bottom = 20.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Text(
+                text = "Vitals",
+                style = MaterialTheme.typography.title2,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                textAlign = TextAlign.Center
             )
-            // Keeping the theme-colored border on the center button for visual pop
-            .border(
-                width = 3.dp,
-                color = borderColor,
-                shape = CircleShape
+        }
+
+        item {
+            VitalCard(
+                title = "Heart Rate",
+                value = "${vitalsOverview.heartRate.bpm}",
+                unit = "BPM",
+                icon = Icons.Default.Favorite
             )
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
+        }
+
+        item {
+            VitalCard(
+                title = "Blood Pressure",
+                value = "${vitalsOverview.bloodPressure.systolic}/${vitalsOverview.bloodPressure.diastolic}",
+                unit = "mmHg",
+                icon = Icons.Default.MonitorHeart
+            )
+        }
+
+        item {
+            VitalCard(
+                title = "Blood Glucose",
+                value = "${vitalsOverview.bloodGlucose.level}",
+                unit = "mg/dL",
+                icon = Icons.Default.Bloodtype
+            )
+        }
+    }
+}
+
+@Composable
+fun HeartRatePage(heartRate: HeartRateData) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "Back",
-            tint = Color.White,
-            modifier = Modifier.size(32.dp)
+            imageVector = Icons.Default.Favorite,
+            contentDescription = "Heart Rate",
+            tint = MaterialTheme.colors.primary,
+            modifier = Modifier.size(24.dp)
         )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Heart Rate",
+            style = MaterialTheme.typography.caption1,
+            color = MaterialTheme.colors.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "${heartRate.bpm}",
+            style = MaterialTheme.typography.display1,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.onSurface,
+            fontSize = 32.sp
+        )
+
+        Text(
+            text = "Beats per minute",
+            style = MaterialTheme.typography.caption1,
+            color = MaterialTheme.colors.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Simple trend line
+        SimpleGraph(
+            data = heartRate.graphPoints,
+            color = MaterialTheme.colors.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(20.dp)
+        )
+    }
+}
+
+@Composable
+fun BloodPressurePage(bloodPressure: BloodPressureData) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.MonitorHeart,
+            contentDescription = "Blood Pressure",
+            tint = MaterialTheme.colors.primary,
+            modifier = Modifier.size(24.dp)
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Blood Pressure",
+            style = MaterialTheme.typography.caption1,
+            color = MaterialTheme.colors.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                text = "${bloodPressure.systolic}",
+                style = MaterialTheme.typography.title1,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colors.onSurface,
+                fontSize = 28.sp
+            )
+            Text(
+                text = "/",
+                style = MaterialTheme.typography.title1,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colors.onSurface,
+                fontSize = 28.sp
+            )
+            Text(
+                text = "${bloodPressure.diastolic}",
+                style = MaterialTheme.typography.title1,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colors.onSurface,
+                fontSize = 28.sp
+            )
+        }
+
+        Text(
+            text = "mmHg",
+            style = MaterialTheme.typography.caption1,
+            color = MaterialTheme.colors.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Simple trend line
+        SimpleGraph(
+            data = bloodPressure.systolicPoints,
+            color = MaterialTheme.colors.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(20.dp)
+        )
+    }
+}
+
+@Composable
+fun BloodGlucosePage(bloodGlucose: BloodGlucoseData) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Bloodtype,
+            contentDescription = "Blood Glucose",
+            tint = MaterialTheme.colors.primary,
+            modifier = Modifier.size(24.dp)
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Blood Glucose",
+            style = MaterialTheme.typography.caption1,
+            color = MaterialTheme.colors.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "${bloodGlucose.level}",
+            style = MaterialTheme.typography.display1,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.onSurface,
+            fontSize = 32.sp
+        )
+
+        Text(
+            text = "mg/dL",
+            style = MaterialTheme.typography.caption1,
+            color = MaterialTheme.colors.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Simple trend line
+        SimpleGraph(
+            data = bloodGlucose.graphPoints,
+            color = MaterialTheme.colors.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(20.dp)
+        )
+    }
+}
+
+@Composable
+fun VitalCard(
+    title: String,
+    value: String,
+    unit: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Card(
+        onClick = { /* Handle card click if needed */ },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = MaterialTheme.colors.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.body2,
+                    color = MaterialTheme.colors.onSurface,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.title1,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colors.primary,
+                    fontSize = 18.sp
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = unit,
+                    style = MaterialTheme.typography.caption1,
+                    color = MaterialTheme.colors.onSurfaceVariant,
+                    fontSize = 10.sp
+                )
+            }
+        }
     }
 }
