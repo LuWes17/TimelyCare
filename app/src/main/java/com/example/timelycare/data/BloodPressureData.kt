@@ -126,29 +126,14 @@ object BloodPressureDataGenerator {
         val today = LocalDate.now()
         return listOf(
             HistoricalBPReading(
-                date = today.minusDays(7),
-                displayDate = "Wed, Nov 5",
-                reading = BloodPressureReading(118, 78, 76, "Wed", BPCategory.NORMAL)
+                date = today,
+                displayDate = "Today",
+                reading = BloodPressureReading(120, 80, 79, "Today", BPCategory.ELEVATED)
             ),
             HistoricalBPReading(
-                date = today.minusDays(6),
-                displayDate = "Thu, Nov 6",
-                reading = BloodPressureReading(122, 81, 82, "Thu", BPCategory.ELEVATED)
-            ),
-            HistoricalBPReading(
-                date = today.minusDays(5),
-                displayDate = "Fri, Nov 7",
-                reading = BloodPressureReading(115, 75, 74, "Fri", BPCategory.NORMAL)
-            ),
-            HistoricalBPReading(
-                date = today.minusDays(4),
-                displayDate = "Sat, Nov 8",
-                reading = BloodPressureReading(120, 80, 79, "Sat", BPCategory.ELEVATED)
-            ),
-            HistoricalBPReading(
-                date = today.minusDays(3),
-                displayDate = "Sun, Nov 9",
-                reading = BloodPressureReading(125, 79, 81, "Sun", BPCategory.ELEVATED)
+                date = today.minusDays(1),
+                displayDate = "Yesterday",
+                reading = BloodPressureReading(121, 82, 83, "Yesterday", BPCategory.ELEVATED)
             ),
             HistoricalBPReading(
                 date = today.minusDays(2),
@@ -156,9 +141,29 @@ object BloodPressureDataGenerator {
                 reading = BloodPressureReading(119, 77, 78, "Mon", BPCategory.NORMAL)
             ),
             HistoricalBPReading(
-                date = today.minusDays(1),
-                displayDate = "Yesterday",
-                reading = BloodPressureReading(121, 82, 83, "Yesterday", BPCategory.ELEVATED)
+                date = today.minusDays(3),
+                displayDate = "Sun, Nov 9",
+                reading = BloodPressureReading(125, 79, 81, "Sun", BPCategory.ELEVATED)
+            ),
+            HistoricalBPReading(
+                date = today.minusDays(4),
+                displayDate = "Sat, Nov 8",
+                reading = BloodPressureReading(120, 80, 79, "Sat", BPCategory.ELEVATED)
+            ),
+            HistoricalBPReading(
+                date = today.minusDays(5),
+                displayDate = "Fri, Nov 7",
+                reading = BloodPressureReading(115, 75, 74, "Fri", BPCategory.NORMAL)
+            ),
+            HistoricalBPReading(
+                date = today.minusDays(6),
+                displayDate = "Thu, Nov 6",
+                reading = BloodPressureReading(122, 81, 82, "Thu", BPCategory.ELEVATED)
+            ),
+            HistoricalBPReading(
+                date = today.minusDays(7),
+                displayDate = "Wed, Nov 5",
+                reading = BloodPressureReading(118, 78, 76, "Wed", BPCategory.NORMAL)
             )
         )
     }

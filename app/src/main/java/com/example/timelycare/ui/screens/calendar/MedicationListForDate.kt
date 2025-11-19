@@ -119,10 +119,10 @@ private fun CalendarMedicationCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isTaken) Color(0xFF4CAF50).copy(alpha = 0.1f) else TimelyCareWhite
+            containerColor = TimelyCareWhite
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         border = if (isTaken) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4CAF50)) else null
     ) {
         Row(

@@ -81,16 +81,16 @@ fun DailyGlucoseChart(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 LegendItem(
-                    color = getGlucoseCategoryColor(GlucoseCategory.LOW),
-                    label = "Low (<70)"
-                )
-                LegendItem(
                     color = getGlucoseCategoryColor(GlucoseCategory.NORMAL),
-                    label = "Normal (70-140)"
+                    label = "Normal"
                 )
                 LegendItem(
                     color = getGlucoseCategoryColor(GlucoseCategory.HIGH),
-                    label = "High (>140)"
+                    label = "Elevated"
+                )
+                LegendItem(
+                    color = getGlucoseCategoryColor(GlucoseCategory.LOW),
+                    label = "High"
                 )
             }
         }

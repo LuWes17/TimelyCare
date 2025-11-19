@@ -73,17 +73,7 @@ fun CurrentBPReadingCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Status display
-            Text(
-                text = dailyData.current.statusDisplay,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = getBPCategoryColor(dailyData.current.overallCategory)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             // Statistics row
             Row(

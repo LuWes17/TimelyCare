@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.timelycare.R
 import com.example.timelycare.data.EmergencyContact
 import com.example.timelycare.ui.theme.*
 
@@ -57,7 +59,7 @@ fun EmergencyContactCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
-                        contentDescription = "Contact",
+                        contentDescription = stringResource(R.string.contact),
                         tint = TimelyCareBlue,
                         modifier = Modifier.size(24.dp)
                     )
@@ -72,12 +74,28 @@ fun EmergencyContactCard(
                         fontWeight = FontWeight.Bold,
                         color = TimelyCareTextPrimary
                     )
-                    Text(
-                        text = contact.fullPhoneNumber,
-                        fontSize = 14.sp,
-                        color = TimelyCareTextSecondary,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = contact.relationship,
+                            fontSize = 14.sp,
+                            color = TimelyCareBlue,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "•",
+                            fontSize = 14.sp,
+                            color = TimelyCareTextSecondary
+                        )
+                        Text(
+                            text = contact.fullPhoneNumber,
+                            fontSize = 14.sp,
+                            color = TimelyCareTextSecondary
+                        )
+                    }
                 }
             }
 
@@ -91,7 +109,7 @@ fun EmergencyContactCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit contact",
+                        contentDescription = stringResource(R.string.edit_contact_desc),
                         tint = TimelyCareBlue,
                         modifier = Modifier.size(20.dp)
                     )
@@ -103,7 +121,7 @@ fun EmergencyContactCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete contact",
+                        contentDescription = stringResource(R.string.delete_contact_desc),
                         tint = Color(0xFFE53E3E),
                         modifier = Modifier.size(20.dp)
                     )
@@ -117,13 +135,13 @@ fun EmergencyContactCard(
             onDismissRequest = { showDeleteConfirmation = false },
             title = {
                 Text(
-                    text = "Delete Contact",
+                    text = stringResource(R.string.delete_contact_title),
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Text(
-                    text = "Are you sure you want to delete ${contact.name} from your emergency contacts?"
+                    text = stringResource(R.string.delete_contact_confirmation, contact.name)
                 )
             },
             confirmButton = {
@@ -136,14 +154,14 @@ fun EmergencyContactCard(
                         contentColor = Color(0xFFE53E3E)
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showDeleteConfirmation = false }
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

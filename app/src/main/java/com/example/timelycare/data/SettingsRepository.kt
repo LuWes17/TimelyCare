@@ -6,6 +6,7 @@ import androidx.compose.runtime.Stable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.example.timelycare.utils.LocaleHelper
 
 @Stable
 data class UserSettings(
@@ -19,7 +20,7 @@ enum class LanguageOption { ENGLISH, FILIPINO }
 
 enum class AlertLevelOption { LOW, NORMAL, HIGH }
 
-class SettingsRepository private constructor(context: Context) {
+class SettingsRepository private constructor(private val context: Context) {
 
     private val prefs: SharedPreferences =
         context.applicationContext.getSharedPreferences("timelycare_settings", Context.MODE_PRIVATE)
@@ -27,21 +28,27 @@ class SettingsRepository private constructor(context: Context) {
     private val _settings = MutableStateFlow(loadSettings())
     val settings: StateFlow<UserSettings> = _settings.asStateFlow()
 
+    var onLanguageChanged: (() -> Unit)? = null
+
     private fun loadSettings(): UserSettings {
         val languageString = prefs.getString("language", LanguageOption.ENGLISH.name) ?: LanguageOption.ENGLISH.name
         val themeColorIndex = prefs.getInt("theme_color_index", 0)
         val darkModeEnabled = prefs.getBoolean("dark_mode_enabled", false)
         val alertLevelString = prefs.getString("alert_level", AlertLevelOption.NORMAL.name) ?: AlertLevelOption.NORMAL.name
 
+        // Ensure theme color index is valid (max 5 colors: 0-5)
+        val validThemeColorIndex = themeColorIndex.coerceIn(0, 5)
+
         return UserSettings(
             language = LanguageOption.valueOf(languageString),
-            themeColorIndex = themeColorIndex,
+            themeColorIndex = validThemeColorIndex,
             darkModeEnabled = darkModeEnabled,
             alertLevel = AlertLevelOption.valueOf(alertLevelString)
         )
     }
 
     fun updateSettings(update: UserSettings) {
+        val previousLanguage = _settings.value.language
         _settings.value = update
         prefs.edit()
             .putString("language", update.language.name)
@@ -49,6 +56,12 @@ class SettingsRepository private constructor(context: Context) {
             .putBoolean("dark_mode_enabled", update.darkModeEnabled)
             .putString("alert_level", update.alertLevel.name)
             .apply()
+
+        // Apply locale change if language changed
+        if (previousLanguage != update.language) {
+            LocaleHelper.updateResources(context, update.language)
+            onLanguageChanged?.invoke()
+        }
     }
 
     fun updateDarkMode(enabled: Boolean) {

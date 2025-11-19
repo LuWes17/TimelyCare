@@ -133,6 +133,7 @@ fun ContactsScreen() {
                 val emergencyContact = EmergencyContact(
                     name = phonebookContact.name,
                     phone = phonebookContact.phone,
+                    relationship = "Contact",
                     countryCode = "+63"
                 )
 
