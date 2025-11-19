@@ -140,27 +140,29 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                     }
                 }
 
-                item {
-                    Text(
-                        text = "Backup Contacts",
-                        style = MaterialTheme.typography.title2,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colors.onBackground,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp)
-                    )
-                }
+                if (backupContacts.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Backup Contacts",
+                            style = MaterialTheme.typography.title2,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colors.onBackground,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp)
+                        )
+                    }
 
-                items(backupContacts) { contact ->
-                    EmergencyContactListItem(
-                        contact = contact,
-                        onCallClick = {
-                            callMessage = "Calling ${contact.name} through your phone"
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    items(backupContacts) { contact ->
+                        EmergencyContactListItem(
+                            contact = contact,
+                            onCallClick = {
+                                callMessage = "Calling ${contact.name} through your phone"
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
 
                 item {

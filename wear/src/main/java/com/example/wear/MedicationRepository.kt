@@ -14,6 +14,14 @@ data class Medication(
     val isMaintenanceMed: Boolean = false
 )
 
+data class MedicineReminder(
+    val id: String,
+    val medicineName: String,
+    val dosage: String,
+    val scheduledTime: String,
+    val isActive: Boolean = true
+)
+
 data class MedicationTakenRecord(
     val medicationId: String,
     val takenDate: String, // Format: "yyyy-MM-dd"
@@ -41,20 +49,14 @@ class MedicationRepository private constructor(context: Context) {
     private val _emergencyContacts = MutableStateFlow<List<EmergencyContact>>(emptyList())
     val emergencyContacts: StateFlow<List<EmergencyContact>> = _emergencyContacts
 
+    private val _activeReminder = MutableStateFlow<MedicineReminder?>(null)
+    val activeReminder: StateFlow<MedicineReminder?> = _activeReminder
+
     init {
-        loadMedications()
-        loadTakenRecords()
-        loadEmergencyContacts()
-
-        // Add sample medications for testing if none exist
-        if (_medications.value.isEmpty()) {
-            addSampleMedications()
-        }
-
-        // Add sample emergency contacts if none exist
-        if (_emergencyContacts.value.isEmpty()) {
-            addSampleEmergencyContacts()
-        }
+        // Clear existing data and load fresh sample data
+        clearAllData()
+        addSampleMedications()
+        addSampleEmergencyContacts()
     }
 
     fun updateMedications(medications: List<Medication>) {
@@ -89,6 +91,29 @@ class MedicationRepository private constructor(context: Context) {
 
     fun getBackupContacts(): List<EmergencyContact> {
         return _emergencyContacts.value.filter { !it.isPrimary }
+    }
+
+    fun triggerReminder(reminder: MedicineReminder) {
+        android.util.Log.d("WearMedicationRepo", "Triggering reminder for ${reminder.medicineName}")
+        _activeReminder.value = reminder
+    }
+
+    fun dismissReminder() {
+        android.util.Log.d("WearMedicationRepo", "Dismissing active reminder")
+        _activeReminder.value = null
+    }
+
+    fun confirmReminder() {
+        android.util.Log.d("WearMedicationRepo", "Confirming active reminder")
+        _activeReminder.value = null
+    }
+
+    private fun clearAllData() {
+        android.util.Log.d("WearMedicationRepo", "Clearing all existing data")
+        prefs.edit().clear().apply()
+        _medications.value = emptyList()
+        _takenRecords.value = emptyList()
+        _emergencyContacts.value = emptyList()
     }
 
     companion object {
@@ -171,25 +196,9 @@ class MedicationRepository private constructor(context: Context) {
         val sampleMedications = listOf(
             Medication(
                 id = "sample_1",
-                name = "Metformin",
-                dosage = "500mg",
+                name = "Biogesic",
+                dosage = "50mg",
                 time = "8:00 AM",
-                frequency = "Daily",
-                isMaintenanceMed = false
-            ),
-            Medication(
-                id = "sample_2",
-                name = "Amoxicillin",
-                dosage = "250mg",
-                time = "12:00 PM",
-                frequency = "Daily",
-                isMaintenanceMed = false
-            ),
-            Medication(
-                id = "sample_3",
-                name = "Lisinopril",
-                dosage = "10mg",
-                time = "6:00 PM",
                 frequency = "Daily",
                 isMaintenanceMed = true
             )
@@ -246,24 +255,10 @@ class MedicationRepository private constructor(context: Context) {
         val sampleContacts = listOf(
             EmergencyContact(
                 id = "contact_1",
-                name = "Sarah Johnson",
-                relationship = "Daughter",
+                name = "Juan Dela Cruz",
+                relationship = "Father",
                 phoneNumber = "+1-555-0123",
                 isPrimary = true
-            ),
-            EmergencyContact(
-                id = "contact_2",
-                name = "Michael Johnson",
-                relationship = "Son",
-                phoneNumber = "+1-555-0124",
-                isPrimary = false
-            ),
-            EmergencyContact(
-                id = "contact_3",
-                name = "Dr. Anderson",
-                relationship = "Doctor",
-                phoneNumber = "+1-555-0125",
-                isPrimary = false
             )
         )
 
