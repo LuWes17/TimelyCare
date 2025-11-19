@@ -42,6 +42,7 @@ android {
 dependencies {
     implementation(libs.play.services.wearable)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation("androidx.compose.material:material-icons-extended")
     wearApp(project(":wear"))
 
     implementation(libs.androidx.core.ktx)

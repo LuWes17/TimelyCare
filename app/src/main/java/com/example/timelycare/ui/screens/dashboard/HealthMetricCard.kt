@@ -7,6 +7,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.MonitorHeart
+import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -102,9 +105,9 @@ fun HealthMetricCard(
 @Composable
 private fun getHealthMetricIcon(iconType: HealthMetricIcon): ImageVector {
     return when (iconType) {
-        HealthMetricIcon.HEART_RATE -> Icons.Default.FavoriteBorder
-        HealthMetricIcon.BLOOD_PRESSURE -> Icons.Default.Favorite
-        HealthMetricIcon.GLUCOSE -> Icons.Default.FavoriteBorder // Using same icon, will be styled differently
+        HealthMetricIcon.HEART_RATE -> Icons.Filled.MonitorHeart
+        HealthMetricIcon.BLOOD_PRESSURE -> Icons.Filled.HealthAndSafety
+        HealthMetricIcon.GLUCOSE -> Icons.Filled.WaterDrop
     }
 }
 

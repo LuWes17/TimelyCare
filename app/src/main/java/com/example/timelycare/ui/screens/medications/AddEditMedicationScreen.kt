@@ -23,8 +23,10 @@ import androidx.compose.ui.unit.sp
 import com.example.timelycare.data.*
 import com.example.timelycare.ui.theme.*
 import com.example.timelycare.ui.components.FrequencySelectionModal
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
@@ -233,7 +235,9 @@ fun AddEditMedicationScreen(
         OutlinedTextField(
             value = medicineName,
             onValueChange = {
-                medicineName = it
+                // Remove newlines from input
+                val filteredText = it.replace("\n", "")
+                medicineName = filteredText
                 if (medicineNameError.isNotEmpty()) medicineNameError = ""
             },
             label = { Text("Medicine Name *") },
@@ -248,13 +252,20 @@ fun AddEditMedicationScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = TimelyCareBlue,
                 focusedLabelColor = TimelyCareBlue
-            )
+            ),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                autoCorrect = true
+            ),
+            singleLine = true
         )
 
         OutlinedTextField(
             value = dosage,
             onValueChange = {
-                dosage = it
+                // Remove newlines from input
+                val filteredText = it.replace("\n", "")
+                dosage = filteredText
                 if (dosageError.isNotEmpty()) dosageError = ""
             },
             label = { Text("Dosage *") },
@@ -269,7 +280,12 @@ fun AddEditMedicationScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = TimelyCareBlue,
                 focusedLabelColor = TimelyCareBlue
-            )
+            ),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                autoCorrect = true
+            ),
+            singleLine = true
         )
 
         Text(
@@ -302,7 +318,7 @@ fun AddEditMedicationScreen(
                 expanded = typeDropdownExpanded,
                 onDismissRequest = { typeDropdownExpanded = false }
             ) {
-                listOf("Pill", "Tablet", "Capsule", "Liquid", "Injection", "Others").forEach { type ->
+                listOf("Pill", "Tablet", "Liquid", "Others").forEach { type ->
                     DropdownMenuItem(
                         text = { Text(type) },
                         onClick = {
@@ -343,7 +359,7 @@ fun AddEditMedicationScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Start Date *",
+                    text = "Start Date",
                     fontWeight = FontWeight.Medium,
                     color = if (startDateError.isNotEmpty()) Color.Red else TimelyCareTextPrimary,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -399,7 +415,7 @@ fun AddEditMedicationScreen(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "End Date *",
+                    text = "End Date",
                     fontWeight = FontWeight.Medium,
                     color = if (endDateError.isNotEmpty()) Color.Red else TimelyCareTextPrimary,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -539,7 +555,11 @@ fun AddEditMedicationScreen(
 
         OutlinedTextField(
             value = specialInstructions,
-            onValueChange = { specialInstructions = it },
+            onValueChange = {
+                // Remove newlines from input but allow text wrapping
+                val filteredText = it.replace("\n", " ")
+                specialInstructions = filteredText
+            },
             placeholder = { Text("Enter any special instructions...") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -548,6 +568,10 @@ fun AddEditMedicationScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = TimelyCareBlue,
                 focusedLabelColor = TimelyCareBlue
+            ),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                autoCorrect = true
             ),
             maxLines = 4
         )
@@ -679,15 +703,31 @@ fun AddEditMedicationScreen(
 
     // Start Date Picker
     if (showStartDatePicker) {
-        val startDatePickerState = rememberDatePickerState()
+        val startDatePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = System.currentTimeMillis()
+        )
+
         DatePickerDialog(
             onDismissRequest = { showStartDatePicker = false },
             confirmButton = {
                 TextButton(
                     onClick = {
                         startDatePickerState.selectedDateMillis?.let { millis ->
-                            val selectedDate = LocalDate.ofEpochDay(millis / 86400000L)
-                            startDate = selectedDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+                            val selectedDate = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                            // Validate: cannot select past date
+                            if (!selectedDate.isBefore(LocalDate.now())) {
+                                startDate = selectedDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+                                // Ensure end date is not before start date
+                                val parsedEnd = parseDateString(endDate)
+                                if (parsedEnd != null && parsedEnd.isBefore(selectedDate)) {
+                                    endDate = startDate
+                                }
+                                startDateError = ""
+                            } else {
+                                startDateError = "Start date cannot be in the past"
+                            }
                         }
                         showStartDatePicker = false
                     }
@@ -696,9 +736,7 @@ fun AddEditMedicationScreen(
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showStartDatePicker = false }
-                ) {
+                TextButton(onClick = { showStartDatePicker = false }) {
                     Text("Cancel", color = TimelyCareGray, fontSize = 16.sp)
                 }
             }
@@ -719,15 +757,28 @@ fun AddEditMedicationScreen(
 
     // End Date Picker
     if (showEndDatePicker) {
-        val endDatePickerState = rememberDatePickerState()
+        val parsedStart = parseDateString(startDate) ?: LocalDate.now()
+        val startMillis = parsedStart.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val endDatePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = startMillis
+        )
+
         DatePickerDialog(
             onDismissRequest = { showEndDatePicker = false },
             confirmButton = {
                 TextButton(
                     onClick = {
                         endDatePickerState.selectedDateMillis?.let { millis ->
-                            val selectedDate = LocalDate.ofEpochDay(millis / 86400000L)
-                            endDate = selectedDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+                            val selectedDate = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                            // Validate: cannot select date before start date
+                            if (!selectedDate.isBefore(parsedStart)) {
+                                endDate = selectedDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+                                endDateError = ""
+                            } else {
+                                endDateError = "End date cannot be before start date"
+                            }
                         }
                         showEndDatePicker = false
                     }
@@ -736,9 +787,7 @@ fun AddEditMedicationScreen(
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showEndDatePicker = false }
-                ) {
+                TextButton(onClick = { showEndDatePicker = false }) {
                     Text("Cancel", color = TimelyCareGray, fontSize = 16.sp)
                 }
             }

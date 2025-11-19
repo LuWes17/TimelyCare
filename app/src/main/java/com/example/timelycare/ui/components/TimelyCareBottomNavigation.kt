@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.Medication
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -29,7 +30,7 @@ fun TimelyCareBottomNavigation(
         ),
         BottomNavItem(
             title = if (lang == LanguageOption.FILIPINO) "Gamot" else "Medications",
-            icon = Icons.Default.Add
+            icon = Icons.Filled.Medication
         ),
         BottomNavItem(
             title = if (lang == LanguageOption.FILIPINO) "Kalendaryo" else "Calendar",

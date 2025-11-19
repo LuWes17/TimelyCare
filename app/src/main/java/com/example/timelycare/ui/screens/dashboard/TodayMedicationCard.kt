@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,11 +56,12 @@ fun TodayMedicationCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top // Changed from CenterVertically to Top
             ) {
                 // Left side with pill icon and medication info
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top, // Changed from CenterVertically to Top
+                    modifier = Modifier.weight(1f) // Added weight to constrain width
                 ) {
                     // Pill icon
                     Box(
@@ -103,29 +105,39 @@ fun TodayMedicationCard(
                     Spacer(modifier = Modifier.width(12.dp))
 
                     // Medicine name and dosage
-                    Column {
+                    Column(
+                        modifier = Modifier.weight(1f) // Added to constrain text width
+                    ) {
                         Text(
                             text = medication.name,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TimelyCareTextPrimary
+                            color = TimelyCareTextPrimary,
+                            maxLines = 2, // Limit to 2 lines
+                            overflow = TextOverflow.Ellipsis // Add ellipsis if too long
                         )
                         Text(
                             text = medication.dosage,
                             fontSize = 16.sp,
                             color = TimelyCareTextSecondary,
-                            modifier = Modifier.padding(top = 2.dp)
+                            modifier = Modifier.padding(top = 2.dp),
+                            maxLines = 1, // Limit to 1 line
+                            overflow = TextOverflow.Ellipsis
                         )
                         if (medication.specialInstructions.isNotBlank()) {
                             Text(
                                 text = "Notes: ${medication.specialInstructions}",
                                 fontSize = 14.sp,
                                 color = TimelyCareTextPrimary,
-                                modifier = Modifier.padding(top = 4.dp)
+                                modifier = Modifier.padding(top = 4.dp),
+                                maxLines = 2, // Limit to 2 lines
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 // Right side with time and status
                 Column(

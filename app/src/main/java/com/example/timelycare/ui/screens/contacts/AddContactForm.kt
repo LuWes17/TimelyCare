@@ -7,13 +7,12 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
-import com.example.timelycare.data.CountryCode
+import androidx.compose.ui.text.font.FontWeight
 import com.example.timelycare.data.CountryCodes
 import com.example.timelycare.data.EmergencyContact
 import com.example.timelycare.ui.theme.*
@@ -38,18 +37,24 @@ fun AddContactForm(
             }
         )
     }
-    var phone by remember(editingContact, selectedCountryCode) {
-        mutableStateOf(
-            editingContact?.phone?.let { sanitizePhoneNumberInput(it, selectedCountryCode) } ?: ""
-        )
+
+    var phone by remember(editingContact) {
+        mutableStateOf(editingContact?.phone ?: "")
     }
 
     var nameError by remember { mutableStateOf("") }
     var phoneError by remember { mutableStateOf("") }
 
+    fun isValidPhilippinesNumber(num: String): Boolean {
+        val digitsOnly = num.filter { it.isDigit() }
+        return (digitsOnly.startsWith("09") && digitsOnly.length == 11) || 
+               (digitsOnly.startsWith("9") && digitsOnly.length == 10)
+    }
+
     fun validateForm(): Boolean {
         var isValid = true
 
+        // NAME VALIDATION
         nameError = when {
             name.isBlank() -> {
                 isValid = false
@@ -62,20 +67,26 @@ fun AddContactForm(
             else -> ""
         }
 
+        // PHONE VALIDATION
+        val digitsOnly = phone.filter { it.isDigit() }
         phoneError = when {
             phone.isBlank() -> {
                 isValid = false
                 "Phone number is required"
             }
-            phone.length < 7 -> {
+            !phone.all { it.isDigit() || it == '+' || it == ' ' || it == '-' } -> {
                 isValid = false
-                "Phone number must be at least 7 digits"
+                "Phone number can only contain digits, +, spaces, or hyphens"
             }
-            !phone.all { it.isDigit() } -> {
+            digitsOnly.isEmpty() -> {
                 isValid = false
-                "Phone number must contain only digits"
+                "Phone number must contain digits"
             }
-            isPhoneNumberExists(phone) -> {
+            selectedCountryCode == CountryCodes.PHILIPPINES && !isValidPhilippinesNumber(phone) -> {
+                isValid = false
+                "PH phone number must start with '09' (11 digits) or '9' (10 digits)"
+            }
+            isPhoneNumberExists(digitsOnly) -> {
                 isValid = false
                 "This phone number already exists"
             }
@@ -133,7 +144,11 @@ fun AddContactForm(
                     unfocusedTextColor = TimelyCareTextPrimary
                 ),
                 shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true, // Prevents newline on Enter key
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done // Shows Done instead of Enter
+                )
             )
 
             // Country code dropdown
@@ -141,7 +156,7 @@ fun AddContactForm(
                 selectedCountryCode = selectedCountryCode,
                 onCountryCodeSelected = {
                     selectedCountryCode = it
-                    phone = sanitizePhoneNumberInput(phone, it)
+                    phoneError = "" // Clear phone error when country changes
                 }
             )
 
@@ -149,11 +164,14 @@ fun AddContactForm(
             OutlinedTextField(
                 value = phone,
                 onValueChange = {
-                    phone = sanitizePhoneNumberInput(it, selectedCountryCode)
+                    phone = it
                     phoneError = ""
                 },
                 label = { Text("Phone number *") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Done
+                ),
                 isError = phoneError.isNotEmpty(),
                 supportingText = if (phoneError.isNotEmpty()) {
                     { Text(phoneError, color = MaterialTheme.colorScheme.error) }
@@ -165,7 +183,16 @@ fun AddContactForm(
                     unfocusedTextColor = TimelyCareTextPrimary
                 ),
                 shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = {
+                    Text(
+                        when (selectedCountryCode) {
+                            CountryCodes.PHILIPPINES -> "09XXXXXXXXX or 9XXXXXXXXX"
+                            else -> "Enter phone number"
+                        }
+                    )
+                }
             )
 
             // Action buttons
@@ -188,7 +215,7 @@ fun AddContactForm(
                                 onAddContact(
                                     editingContact.copy(
                                         name = name.trim(),
-                                        phone = phone,
+                                        phone = phone.filter { it.isDigit() }, // Store only digits
                                         countryCode = selectedCountryCode.code
                                     )
                                 )
@@ -217,7 +244,7 @@ fun AddContactForm(
                                 onAddContact(
                                     EmergencyContact(
                                         name = name.trim(),
-                                        phone = phone,
+                                        phone = phone.filter { it.isDigit() }, // Store only digits
                                         countryCode = selectedCountryCode.code
                                     )
                                 )
@@ -256,12 +283,4 @@ fun AddContactForm(
             }
         }
     }
-}
-
-private fun sanitizePhoneNumberInput(rawInput: String, countryCode: CountryCode): String {
-    val digitsOnly = rawInput.filter { it.isDigit() }
-    if (countryCode.code == CountryCodes.PHILIPPINES.code && digitsOnly.length > 1 && digitsOnly.first() == '0') {
-        return digitsOnly.drop(1)
-    }
-    return digitsOnly
 }
