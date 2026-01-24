@@ -9,8 +9,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.composed
-import kotlinx.coroutines.delay
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,7 +36,6 @@ private data class AlertLevel(val label: String, val description: String)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val languageOptions = listOf(stringResource(R.string.english), stringResource(R.string.filipino))
@@ -105,28 +101,6 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.settings),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TimelyCareWhite
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                            tint = TimelyCareWhite
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = TimelyCareBlue)
-            )
-        },
         containerColor = TimelyCareBackground
     ) { paddingValues ->
         Column(
@@ -156,7 +130,6 @@ fun SettingsScreen(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = languageExpanded,
@@ -247,7 +220,6 @@ fun SettingsScreen(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = alertExpanded,
