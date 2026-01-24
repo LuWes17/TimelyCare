@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.*
 import com.example.wear.EmergencyContact
+import com.example.wear.presentation.components.TrackableButton
 
 @Composable
 fun EmergencyContactListItem(
@@ -60,13 +61,14 @@ fun EmergencyContactListItem(
             }
 
             // Call Button
-            Button(
+            TrackableButton(
+                elementName = "BackupContact_${contact.name}",
+                screenName = "EMERGENCY",
                 onClick = onCallClick,
                 modifier = Modifier.size(40.dp),
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.Red
-                ),
-                shape = CircleShape
+                )
             ) {
                 Icon(
                     imageVector = Icons.Default.Phone,
