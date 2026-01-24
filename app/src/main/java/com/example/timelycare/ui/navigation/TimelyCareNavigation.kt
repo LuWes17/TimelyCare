@@ -22,6 +22,7 @@ import com.example.timelycare.ui.screens.heartrate.HeartRateScreen
 import com.example.timelycare.ui.screens.bloodpressure.BloodPressureScreen
 import com.example.timelycare.ui.screens.glucose.GlucoseScreen
 import com.example.timelycare.ui.screens.settings.SettingsScreen
+import com.example.timelycare.ui.components.SettingsHeader
 import com.example.timelycare.data.Medication
 
 @Composable
@@ -44,10 +45,12 @@ fun TimelyCareApp() {
                         editingMedication = null
                     }
                 )
-                showHeartRateScreen -> null // Heart rate screen has its own header
-                showBloodPressureScreen -> null // Blood pressure screen has its own header
-                showGlucoseScreen -> null // Glucose screen has its own header
-                showSettingsScreen -> null // Settings screen has its own header
+                showHeartRateScreen -> null
+                showBloodPressureScreen -> null
+                showGlucoseScreen -> null
+                showSettingsScreen -> SettingsHeader(
+                    onBackClick = { showSettingsScreen = false }
+                )
                 selectedTabIndex == 1 -> MedicationsHeader(onAddClick = { showAddMedicine = true })
                 selectedTabIndex == 2 -> CalendarHeader(onSettingsClick = { showSettingsScreen = true })
                 selectedTabIndex == 3 -> ContactsHeader(onSettingsClick = { showSettingsScreen = true })
@@ -71,7 +74,7 @@ fun TimelyCareApp() {
         ) {
             when {
                 showSettingsScreen -> SettingsScreen(
-                    onBackClick = { showSettingsScreen = false }
+
                 )
                 showAddMedicine -> AddEditMedicationScreen(
                     editingMedication = editingMedication,

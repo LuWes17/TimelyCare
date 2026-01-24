@@ -7,10 +7,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.MonitorHeart
+import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -101,9 +105,9 @@ fun HealthMetricCard(
 @Composable
 private fun getHealthMetricIcon(iconType: HealthMetricIcon): ImageVector {
     return when (iconType) {
-        HealthMetricIcon.HEART_RATE -> Icons.Default.FavoriteBorder
-        HealthMetricIcon.BLOOD_PRESSURE -> Icons.Default.FavoriteBorder
-        HealthMetricIcon.GLUCOSE -> Icons.Default.FavoriteBorder
+        HealthMetricIcon.HEART_RATE -> Icons.Filled.MonitorHeart
+        HealthMetricIcon.BLOOD_PRESSURE -> Icons.Filled.HealthAndSafety
+        HealthMetricIcon.GLUCOSE -> Icons.Filled.WaterDrop
     }
 }
 

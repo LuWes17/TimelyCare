@@ -2,7 +2,7 @@ package com.example.timelycare.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,23 +14,23 @@ import com.example.timelycare.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactsHeader(
-    onSettingsClick: () -> Unit = {}
+fun SettingsHeader(
+    onBackClick: () -> Unit
 ) {
     TopAppBar(
         title = {
             Text(
-                text = "Contacts",
+                text = "Settings",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = TimelyCareWhite
             )
         },
-        actions = {
-            IconButton(onClick = onSettingsClick) {
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
                 Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
                     tint = TimelyCareWhite
                 )
             }
@@ -38,11 +38,10 @@ fun ContactsHeader(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent
         ),
-        modifier = Modifier
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(TimelyCareBlue, TimelyCareBlueLight)
-                )
+        modifier = Modifier.background(
+            Brush.horizontalGradient(
+                colors = listOf(TimelyCareBlue, TimelyCareBlueLight)
             )
+        )
     )
 }
