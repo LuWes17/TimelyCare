@@ -1,27 +1,26 @@
 package com.example.timelycare.ui.components
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.timelycare.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactsHeader(
-    onSettingsClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onSettingsClick: () -> Unit = {}
 ) {
     TopAppBar(
         title = {
             Text(
-                text = "Emergency Contacts",
+                text = "Contacts",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = TimelyCareWhite
@@ -37,8 +36,13 @@ fun ContactsHeader(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = TimelyCareBlue
+            containerColor = Color.Transparent
         ),
-        modifier = modifier
+        modifier = Modifier
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(TimelyCareBlue, TimelyCareBlueLight)
+                )
+            )
     )
 }
