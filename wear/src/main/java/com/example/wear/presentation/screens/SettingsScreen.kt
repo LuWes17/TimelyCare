@@ -25,6 +25,9 @@ import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.*
 import com.example.wear.data.settings.*
 import com.example.wear.presentation.viewmodel.SettingsViewModel
+import com.example.wear.presentation.components.TrackableButton
+import com.example.wear.presentation.components.trackableClick
+import com.example.wear.presentation.components.rememberAnalyticsTracker
 
 @OptIn(ExperimentalWearMaterialApi::class)
 @Composable
@@ -154,7 +157,9 @@ fun SettingsScreen(
             }
         }
 
-        Button(
+        TrackableButton(
+            elementName = "Back",
+            screenName = "SETTINGS",
             onClick = onBackClick,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -193,7 +198,12 @@ private fun TextSizeSelector(
                         if (isSelected) MaterialTheme.colors.primary
                         else MaterialTheme.colors.surface
                     )
-                    .clickable { onSizeSelected(size) },
+                    .trackableClick(
+                        elementName = "TextSize_${size.name}",
+                        screenName = "SETTINGS",
+                        elementType = "selector",
+                        onClick = { onSizeSelected(size) }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -254,7 +264,12 @@ private fun ColorOption(
             .size(36.dp)
             .clip(CircleShape)
             .background(color.color)
-            .clickable { onSelected() },
+            .trackableClick(
+                elementName = "AccentColor_${color.name}",
+                screenName = "SETTINGS",
+                elementType = "selector",
+                onClick = { onSelected() }
+            ),
         contentAlignment = Alignment.Center
     ) {
         if (isSelected) {
@@ -287,7 +302,12 @@ private fun WatchTypeSelector(
                         if (isSelected) MaterialTheme.colors.primary
                         else MaterialTheme.colors.surface
                     )
-                    .clickable { onTypeSelected(type) },
+                    .trackableClick(
+                        elementName = "WatchType_${type.name}",
+                        screenName = "SETTINGS",
+                        elementType = "selector",
+                        onClick = { onTypeSelected(type) }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -307,6 +327,8 @@ private fun DarkModeToggle(
     isDarkMode: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
+    val trackEvent = rememberAnalyticsTracker()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -321,7 +343,10 @@ private fun DarkModeToggle(
         )
         Switch(
             checked = isDarkMode,
-            onCheckedChange = onToggle
+            onCheckedChange = { enabled ->
+                trackEvent("DarkMode_${if (enabled) "On" else "Off"}", "SETTINGS", "toggle")
+                onToggle(enabled)
+            }
         )
     }
 }
@@ -332,6 +357,8 @@ private fun ComplicationToggle(
     isEnabled: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
+    val trackEvent = rememberAnalyticsTracker()
+
     val icon = when (feature) {
         ComplicationFeature.SETTINGS -> Icons.Default.Settings
         ComplicationFeature.ALL_MEDS -> Icons.Default.HealthAndSafety
@@ -366,7 +393,10 @@ private fun ComplicationToggle(
 
         Switch(
             checked = isEnabled,
-            onCheckedChange = if (feature.isAlwaysEnabled) null else onToggle,
+            onCheckedChange = if (feature.isAlwaysEnabled) null else { enabled ->
+                trackEvent("Complication_${feature.name}_${if (enabled) "On" else "Off"}", "SETTINGS", "toggle")
+                onToggle(enabled)
+            },
             enabled = !feature.isAlwaysEnabled
         )
     }

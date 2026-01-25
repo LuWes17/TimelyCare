@@ -24,6 +24,8 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
 import androidx.wear.compose.material.*
 import com.example.wear.EmergencyContact
 import com.example.wear.MedicationRepository
+import com.example.wear.presentation.components.TrackableButton
+import com.example.wear.presentation.components.rememberAnalyticsTracker
 import kotlinx.coroutines.delay
 
 @Composable
@@ -32,6 +34,7 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
     val medicationRepository = remember { MedicationRepository.getInstance(context) }
     val emergencyContacts by medicationRepository.emergencyContacts.collectAsState()
     val listState = rememberScalingLazyListState()
+    val trackEvent = rememberAnalyticsTracker()
 
     var callMessage by remember { mutableStateOf<String?>(null) }
     var fallAlertState by remember { mutableStateOf(FallAlertState.NONE) }
@@ -85,7 +88,9 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
 
                 item {
                     primaryContact?.let { contact ->
-                        Button(
+                        TrackableButton(
+                            elementName = "PrimaryContact_${contact.name}",
+                            screenName = "EMERGENCY",
                             onClick = {
                                 callMessage = "Calling ${contact.name} through your phone"
                             },
@@ -95,8 +100,7 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                                 .padding(horizontal = 8.dp),
                             colors = ButtonDefaults.buttonColors(
                                 backgroundColor = Color.Red
-                            ),
-                            shape = RoundedCornerShape(16.dp)
+                            )
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -217,7 +221,9 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                 }
 
                 item {
-                    Button(
+                    TrackableButton(
+                        elementName = "SimulateFall",
+                        screenName = "EMERGENCY",
                         onClick = {
                             fallAlertState = FallAlertState.DETECTED
                         },
@@ -231,8 +237,7 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                         ),
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = MaterialTheme.colors.surface
-                        ),
-                        shape = RoundedCornerShape(24.dp)
+                        )
                     ) {
                         Text(
                             text = "Simulate Fall (Demo)",
@@ -243,7 +248,9 @@ fun EmergencyScreen(onBackClick: () -> Unit) {
                 }
             }
 
-            Button(
+            TrackableButton(
+                elementName = "Back",
+                screenName = "EMERGENCY",
                 onClick = onBackClick,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

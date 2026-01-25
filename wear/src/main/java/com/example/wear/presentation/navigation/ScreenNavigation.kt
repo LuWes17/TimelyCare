@@ -2,7 +2,11 @@ package com.example.wear.presentation.navigation
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Modifier
 import com.example.wear.data.settings.SettingsRepository
+import com.example.wear.data.analytics.AnalyticsRepository
+import com.example.wear.presentation.components.AnalyticsOverlay
 import com.example.wear.presentation.screens.*
 import com.example.wear.presentation.screens.emergency.EmergencyScreen
 import com.example.wear.presentation.screens.vitals.VitalsScreen
@@ -28,10 +32,16 @@ fun AppNavigation() {
     val context = LocalContext.current
     val settingsRepository = remember { SettingsRepository.getInstance(context) }
     val medicationRepository = remember { com.example.wear.MedicationRepository.getInstance(context) }
+    val analyticsRepository = remember { AnalyticsRepository.getInstance(context) }
     val settings by settingsRepository.settingsFlow.collectAsState(initial = com.example.wear.data.settings.AppSettings())
     val activeReminder by medicationRepository.activeReminder.collectAsState()
 
     var currentScreen by remember { mutableStateOf(Screen.HOME) }
+
+    // Track screen changes for analytics
+    LaunchedEffect(currentScreen) {
+        analyticsRepository.recordScreenView(currentScreen.name)
+    }
 
     // 5-second reminder simulation
     LaunchedEffect(Unit) {
@@ -50,8 +60,9 @@ fun AppNavigation() {
         textSize = settings.textSize,
         isDarkMode = settings.isDarkMode
     ) {
-        // Show the current screen
-        when (currentScreen) {
+        Box {
+            // Show the current screen
+            when (currentScreen) {
             Screen.HOME -> {
                 HomeScreen(
                     onNavigateToScreen = { screenName ->
@@ -98,23 +109,27 @@ fun AppNavigation() {
                     onBackClick = { currentScreen = Screen.HOME }
                 )
             }
-            Screen.REMINDER -> {
-                // This case shouldn't be reached as reminder is shown as overlay
-            }
-        }
-
-        // Show reminder overlay when active
-        activeReminder?.let { reminder ->
-            MedicineReminderScreen(
-                medicineName = reminder.medicineName,
-                dosage = reminder.dosage,
-                onDismiss = {
-                    medicationRepository.dismissReminder()
-                },
-                onConfirm = {
-                    medicationRepository.confirmReminder()
+                Screen.REMINDER -> {
+                    // This case shouldn't be reached as reminder is shown as overlay
                 }
-            )
+            }
+
+            // Show reminder overlay when active
+            activeReminder?.let { reminder ->
+                MedicineReminderScreen(
+                    medicineName = reminder.medicineName,
+                    dosage = reminder.dosage,
+                    onDismiss = {
+                        medicationRepository.dismissReminder()
+                    },
+                    onConfirm = {
+                        medicationRepository.confirmReminder()
+                    }
+                )
+            }
+
+            // Analytics overlay - START/END button
+            AnalyticsOverlay()
         }
     }
 }

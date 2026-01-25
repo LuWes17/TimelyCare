@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
 import kotlinx.coroutines.launch
 import com.example.wear.presentation.screens.common.SimpleGraph
+import com.example.wear.presentation.components.TrackableButton
+import com.example.wear.presentation.components.rememberAnalyticsTracker
 
 enum class VitalScreen {
     OVERVIEW, HEART_RATE, BLOOD_PRESSURE, BLOOD_GLUCOSE
@@ -43,9 +45,22 @@ fun VitalsScreen(
     val heartRate by vitalsRepository.heartRate.collectAsState()
     val bloodPressure by vitalsRepository.bloodPressure.collectAsState()
     val bloodGlucose by vitalsRepository.bloodGlucose.collectAsState()
+    val trackEvent = rememberAnalyticsTracker()
 
     val pagerState = rememberPagerState(pageCount = { 4 })
     val coroutineScope = rememberCoroutineScope()
+
+    // Track page swipes
+    LaunchedEffect(pagerState.currentPage) {
+        val pageName = when (pagerState.currentPage) {
+            0 -> "VitalsOverview"
+            1 -> "HeartRate"
+            2 -> "BloodPressure"
+            3 -> "BloodGlucose"
+            else -> "Unknown"
+        }
+        trackEvent("VitalsPage_$pageName", "VITALS", "page_swipe")
+    }
 
     Box(
         modifier = Modifier
@@ -92,7 +107,9 @@ fun VitalsScreen(
         }
 
         // Floating Back Button - Consistent with AllMedicationsScreen
-        Button(
+        TrackableButton(
+            elementName = "Back",
+            screenName = "VITALS",
             onClick = onBackClick,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -354,8 +371,13 @@ fun VitalCard(
     unit: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
+    val trackEvent = rememberAnalyticsTracker()
+
     Card(
-        onClick = { /* Handle card click if needed */ },
+        onClick = {
+            trackEvent("VitalCard_$title", "VITALS", "card")
+            /* Handle card click if needed */
+        },
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp),

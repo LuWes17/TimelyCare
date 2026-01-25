@@ -21,6 +21,8 @@ import androidx.wear.compose.material.*
 
 import com.example.wear.Medication
 import com.example.wear.MedicationRepository
+import com.example.wear.presentation.components.TrackableButton
+import com.example.wear.presentation.components.rememberAnalyticsTracker
 
 @Composable
 fun AllMedicationsScreen(
@@ -79,7 +81,9 @@ fun AllMedicationsScreen(
         }
 
         // Floating Back Button
-        Button(
+        TrackableButton(
+            elementName = "Back",
+            screenName = "ALL_MEDS",
             onClick = onBackClick,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -140,8 +144,13 @@ private fun MedicationCard(
     medication: Medication,
     modifier: Modifier = Modifier
 ) {
+    val trackEvent = rememberAnalyticsTracker()
+
     Card(
-        onClick = { /* TODO: Add medication action if needed */ },
+        onClick = {
+            trackEvent("MedicationCard_${medication.name}", "ALL_MEDS", "card")
+            /* TODO: Add medication action if needed */
+        },
         modifier = modifier.padding(horizontal = 4.dp),
         enabled = true
     ) {

@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.*
+import com.example.wear.presentation.components.TrackableButton
 import kotlinx.coroutines.delay
 
 @Composable
@@ -64,7 +65,9 @@ fun EmergencyFallAlertScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
+            TrackableButton(
+                elementName = "SendAlertNow",
+                screenName = "EMERGENCY",
                 onClick = onSendAlertClick,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -72,8 +75,7 @@ fun EmergencyFallAlertScreen(
                     .padding(horizontal = 4.dp),
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.White
-                ),
-                shape = RoundedCornerShape(20.dp)
+                )
             ) {
                 Text(
                     text = "Send Alert Now",
@@ -85,7 +87,9 @@ fun EmergencyFallAlertScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
+            TrackableButton(
+                elementName = "CancelAlert",
+                screenName = "EMERGENCY",
                 onClick = onCancelClick,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -94,8 +98,7 @@ fun EmergencyFallAlertScreen(
                     .border(1.dp, Color.White, RoundedCornerShape(20.dp)),
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.Transparent
-                ),
-                shape = RoundedCornerShape(20.dp)
+                )
             ) {
                 Text(
                     text = "I'm OK - Cancel",

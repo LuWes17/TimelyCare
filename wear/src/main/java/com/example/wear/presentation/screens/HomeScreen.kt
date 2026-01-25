@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
 import com.example.wear.data.settings.AppSettings
 import com.example.wear.data.settings.WatchType
+import com.example.wear.presentation.components.trackableClick
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -339,7 +340,12 @@ fun CircularActionButtons(
                         color = MaterialTheme.colors.primary,
                         shape = CircleShape
                     )
-                    .clickable { onNavigateToScreen(action.title) },
+                    .trackableClick(
+                        elementName = action.title,
+                        screenName = "HOME",
+                        elementType = "icon_button",
+                        onClick = { onNavigateToScreen(action.title) }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

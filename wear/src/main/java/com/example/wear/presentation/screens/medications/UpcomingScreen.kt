@@ -21,6 +21,8 @@ import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
 import androidx.wear.compose.material.*
 import com.example.wear.MedicationRepository
+import com.example.wear.presentation.components.TrackableButton
+import com.example.wear.presentation.components.rememberAnalyticsTracker
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -118,7 +120,9 @@ fun UpcomingScreen(onBackClick: () -> Unit) {
         }
 
         // Floating Back Button - Consistent with AllMedicationsScreen
-        Button(
+        TrackableButton(
+            elementName = "Back",
+            screenName = "UPCOMING",
             onClick = onBackClick,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -143,8 +147,13 @@ private fun UpcomingMedicationCard(
     medication: com.example.wear.Medication,
     modifier: Modifier = Modifier
 ) {
+    val trackEvent = rememberAnalyticsTracker()
+
     Card(
-        onClick = { /* TODO: Add medication action if needed */ },
+        onClick = {
+            trackEvent("UpcomingMedicationCard_${medication.name}", "UPCOMING", "card")
+            /* TODO: Add medication action if needed */
+        },
         modifier = modifier.padding(horizontal = 4.dp),
         enabled = true
     ) {
