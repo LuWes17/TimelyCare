@@ -11,18 +11,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.composed
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.res.stringResource
 import com.example.timelycare.R
 import com.example.timelycare.data.AlertLevelOption
 import com.example.timelycare.data.LanguageOption
@@ -38,7 +38,11 @@ private data class AlertLevel(val label: String, val description: String)
 fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
-    val languageOptions = listOf(stringResource(R.string.english), stringResource(R.string.filipino))
+    val languageOptions = listOf(
+        stringResource(R.string.english),
+        stringResource(R.string.filipino)
+    )
+
     val themeColorOptions = listOf(
         ThemeColorOption(Color(0xFF00C853), stringResource(R.string.green)),
         ThemeColorOption(Color(0xFF2196F3), stringResource(R.string.blue)),
@@ -47,10 +51,20 @@ fun SettingsScreen(
         ThemeColorOption(Color(0xFFFF9800), stringResource(R.string.orange)),
         ThemeColorOption(Color(0xFFE91E63), stringResource(R.string.pink))
     )
+
     val alertLevels = listOf(
-        AlertLevel(stringResource(R.string.alert_level_low), stringResource(R.string.alert_level_low_description)),
-        AlertLevel(stringResource(R.string.alert_level_normal), stringResource(R.string.alert_level_normal_description)),
-        AlertLevel(stringResource(R.string.alert_level_high), stringResource(R.string.alert_level_high_description))
+        AlertLevel(
+            stringResource(R.string.alert_level_low),
+            stringResource(R.string.alert_level_low_description)
+        ),
+        AlertLevel(
+            stringResource(R.string.alert_level_normal),
+            stringResource(R.string.alert_level_normal_description)
+        ),
+        AlertLevel(
+            stringResource(R.string.alert_level_high),
+            stringResource(R.string.alert_level_high_description)
+        )
     )
 
     val context = LocalContext.current
@@ -59,9 +73,22 @@ fun SettingsScreen(
 
     var selectedLanguage by rememberSaveable { mutableStateOf(languageOptions.first()) }
     var languageExpanded by remember { mutableStateOf(false) }
-    // Custom data classes are not automatically saveable; keep them in regular remember state.
-    var selectedThemeColor by remember { mutableStateOf(themeColorOptions[currentSettings.themeColorIndex.coerceIn(0, themeColorOptions.lastIndex)]) }
-    var darkModeEnabled by rememberSaveable { mutableStateOf(currentSettings.darkModeEnabled) }
+
+    var selectedThemeColor by remember {
+        mutableStateOf(
+            themeColorOptions[
+                currentSettings.themeColorIndex.coerceIn(
+                    0,
+                    themeColorOptions.lastIndex
+                )
+            ]
+        )
+    }
+
+    var darkModeEnabled by rememberSaveable {
+        mutableStateOf(currentSettings.darkModeEnabled)
+    }
+
     var selectedAlertLevel by remember {
         mutableStateOf(
             when (currentSettings.alertLevel) {
@@ -71,16 +98,15 @@ fun SettingsScreen(
             }
         )
     }
+
     var alertExpanded by remember { mutableStateOf(false) }
     var saveConfirmation by rememberSaveable { mutableStateOf(false) }
 
-    // Get string resources in Composable context
     val englishText = stringResource(R.string.english)
     val filipinoText = stringResource(R.string.filipino)
     val alertLowText = stringResource(R.string.alert_level_low)
     val alertHighText = stringResource(R.string.alert_level_high)
 
-    // Update selectedLanguage when current settings change
     LaunchedEffect(currentSettings.language) {
         selectedLanguage = when (currentSettings.language) {
             LanguageOption.FILIPINO -> filipinoText
@@ -88,9 +114,13 @@ fun SettingsScreen(
         }
     }
 
-    // Update selectedThemeColor when current settings change
     LaunchedEffect(currentSettings.themeColorIndex) {
-        selectedThemeColor = themeColorOptions[currentSettings.themeColorIndex.coerceIn(0, themeColorOptions.lastIndex)]
+        selectedThemeColor = themeColorOptions[
+            currentSettings.themeColorIndex.coerceIn(
+                0,
+                themeColorOptions.lastIndex
+            )
+        ]
     }
 
     LaunchedEffect(saveConfirmation) {
@@ -111,9 +141,18 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
+            /* ---------- LANGUAGE ---------- */
             SettingsCard {
-                Text(stringResource(R.string.language), fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = TimelyCareTextPrimary)
+                Text(
+                    stringResource(R.string.language),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TimelyCareTextPrimary
+                )
+
                 Spacer(Modifier.height(12.dp))
+
                 ExposedDropdownMenuBox(
                     expanded = languageExpanded,
                     onExpandedChange = { languageExpanded = !languageExpanded }
@@ -123,14 +162,20 @@ fun SettingsScreen(
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(R.string.preferred_language)) },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = languageExpanded) },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = languageExpanded
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = TimelyCareBlue,
                             unfocusedBorderColor = TimelyCareGray
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        )
                     )
+
                     ExposedDropdownMenu(
                         expanded = languageExpanded,
                         onDismissRequest = { languageExpanded = false }
@@ -148,12 +193,19 @@ fun SettingsScreen(
                 }
             }
 
+            /* ---------- THEME COLOR ---------- */
             SettingsCard {
-                Text(stringResource(R.string.theme_color), fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = TimelyCareTextPrimary)
+                Text(
+                    stringResource(R.string.theme_color),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TimelyCareTextPrimary
+                )
+
                 Spacer(Modifier.height(12.dp))
+
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     themeColorOptions.forEach { option ->
                         Box(
@@ -163,13 +215,14 @@ fun SettingsScreen(
                                 .background(option.color)
                                 .border(
                                     width = if (option == selectedThemeColor) 3.dp else 1.dp,
-                                    color = if (option == selectedThemeColor) TimelyCareBlueDark else Color.White.copy(alpha = 0.5f),
+                                    color = if (option == selectedThemeColor)
+                                        TimelyCareBlueDark
+                                    else Color.White.copy(alpha = 0.5f),
                                     shape = CircleShape
                                 )
-                                .padding(2.dp)
-                                .clip(CircleShape)
-                                .background(option.color)
-                                .clickableWithoutRipple { selectedThemeColor = option }
+                                .clickableWithoutRipple {
+                                    selectedThemeColor = option
+                                }
                         )
                     }
                 }
@@ -182,28 +235,41 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(stringResource(R.string.dark_mode), fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = TimelyCareTextPrimary)
                         Text(
-                            text = stringResource(R.string.dark_mode_description),
+                            stringResource(R.string.dark_mode),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TimelyCareTextPrimary
+                        )
+                        Text(
+                            stringResource(R.string.dark_mode_description),
                             fontSize = 14.sp,
-                            color = TimelyCareTextSecondary,
-                            modifier = Modifier.padding(top = 4.dp)
+                            color = TimelyCareTextSecondary
                         )
                     }
+
                     Switch(
                         checked = darkModeEnabled,
                         onCheckedChange = { darkModeEnabled = it },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = TimelyCareWhite,
-                            checkedTrackColor = TimelyCareBlue
+                            checkedTrackColor = TimelyCareBlue,
+                            checkedThumbColor = TimelyCareWhite
                         )
                     )
                 }
             }
 
+            /* ---------- ALERT LEVEL ---------- */
             SettingsCard {
-                Text(stringResource(R.string.alert_sensitivity), fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = TimelyCareTextPrimary)
+                Text(
+                    stringResource(R.string.alert_sensitivity),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TimelyCareTextPrimary
+                )
+
                 Spacer(Modifier.height(12.dp))
+
                 ExposedDropdownMenuBox(
                     expanded = alertExpanded,
                     onExpandedChange = { alertExpanded = !alertExpanded }
@@ -213,14 +279,20 @@ fun SettingsScreen(
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(R.string.notification_level)) },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = alertExpanded) },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = alertExpanded
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = TimelyCareBlue,
                             unfocusedBorderColor = TimelyCareGray
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        )
                     )
+
                     ExposedDropdownMenu(
                         expanded = alertExpanded,
                         onDismissRequest = { alertExpanded = false }
@@ -230,7 +302,11 @@ fun SettingsScreen(
                                 text = {
                                     Column {
                                         Text(level.label, fontWeight = FontWeight.SemiBold)
-                                        Text(level.description, fontSize = 12.sp, color = TimelyCareTextSecondary)
+                                        Text(
+                                            level.description,
+                                            fontSize = 12.sp,
+                                            color = TimelyCareTextSecondary
+                                        )
                                     }
                                 },
                                 onClick = {
@@ -241,51 +317,45 @@ fun SettingsScreen(
                         }
                     }
                 }
-
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    text = selectedAlertLevel.description,
-                    fontSize = 14.sp,
-                    color = TimelyCareTextSecondary
-                )
             }
 
+            /* ---------- SAVE ---------- */
             Button(
                 onClick = {
-                    val languageOption = when (selectedLanguage) {
-                        filipinoText -> LanguageOption.FILIPINO
-                        else -> LanguageOption.ENGLISH
-                    }
-                    val themeIndex = themeColorOptions.indexOfFirst { it == selectedThemeColor }.coerceAtLeast(0)
-                    val alertOption = when (selectedAlertLevel.label) {
-                        alertLowText -> AlertLevelOption.LOW
-                        alertHighText -> AlertLevelOption.HIGH
-                        else -> AlertLevelOption.NORMAL
-                    }
-
                     settingsRepository.updateSettings(
                         UserSettings(
-                            language = languageOption,
-                            themeColorIndex = themeIndex,
+                            language = if (selectedLanguage == filipinoText)
+                                LanguageOption.FILIPINO
+                            else LanguageOption.ENGLISH,
+                            themeColorIndex = themeColorOptions.indexOf(selectedThemeColor),
                             darkModeEnabled = darkModeEnabled,
-                            alertLevel = alertOption
+                            alertLevel = when (selectedAlertLevel.label) {
+                                alertLowText -> AlertLevelOption.LOW
+                                alertHighText -> AlertLevelOption.HIGH
+                                else -> AlertLevelOption.NORMAL
+                            }
                         )
                     )
-
                     saveConfirmation = true
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = TimelyCareBlue),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = TimelyCareBlue
+                ),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text(stringResource(R.string.save_settings), color = TimelyCareWhite, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                Text(
+                    stringResource(R.string.save_settings),
+                    color = TimelyCareWhite,
+                    fontSize = 18.sp
+                )
             }
 
             if (saveConfirmation) {
                 Text(
-                    text = stringResource(R.string.settings_saved_successfully),
+                    stringResource(R.string.settings_saved_successfully),
                     color = TimelyCareBlue,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -296,28 +366,28 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
+private fun SettingsCard(
+    content: @Composable ColumnScope.() -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = TimelyCareWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             content = content
         )
     }
 }
 
-private fun Modifier.clickableWithoutRipple(onClick: () -> Unit): Modifier = composed {
+private fun Modifier.clickableWithoutRipple(
+    onClick: () -> Unit
+): Modifier = composed {
     clickable(
         indication = null,
         interactionSource = remember { MutableInteractionSource() }
-    ) {
-        onClick()
-    }
+    ) { onClick() }
 }
