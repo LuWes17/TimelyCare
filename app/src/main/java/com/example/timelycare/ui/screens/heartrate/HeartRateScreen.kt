@@ -72,31 +72,6 @@ fun HeartRateScreen(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(TimelyCareBlue)
-                .padding(top = 4.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = TimelyCareWhite
-                )
-            }
-
-            Text(
-                text = "Heart Rate Report",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = TimelyCareWhite,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-
         // Content
         Column(
             modifier = Modifier

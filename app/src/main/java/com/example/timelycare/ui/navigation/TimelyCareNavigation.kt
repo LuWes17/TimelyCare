@@ -13,6 +13,10 @@ import com.example.timelycare.ui.components.AddMedicineHeader
 import com.example.timelycare.ui.components.MedicationsHeader
 import com.example.timelycare.ui.components.CalendarHeader
 import com.example.timelycare.ui.components.ContactsHeader
+import com.example.timelycare.ui.components.BloodPressureHeader
+import com.example.timelycare.ui.components.GlucoseHeader
+import com.example.timelycare.ui.components.HeartRateHeader
+import com.example.timelycare.ui.components.SettingsHeader
 import com.example.timelycare.ui.screens.dashboard.DashboardScreen
 import com.example.timelycare.ui.screens.medications.MedicationsScreen
 import com.example.timelycare.ui.screens.medications.AddEditMedicationScreen
@@ -22,7 +26,6 @@ import com.example.timelycare.ui.screens.heartrate.HeartRateScreen
 import com.example.timelycare.ui.screens.bloodpressure.BloodPressureScreen
 import com.example.timelycare.ui.screens.glucose.GlucoseScreen
 import com.example.timelycare.ui.screens.settings.SettingsScreen
-import com.example.timelycare.ui.components.SettingsHeader
 import com.example.timelycare.data.Medication
 
 @Composable
@@ -45,9 +48,15 @@ fun TimelyCareApp() {
                         editingMedication = null
                     }
                 )
-                showHeartRateScreen -> null
-                showBloodPressureScreen -> null
-                showGlucoseScreen -> null
+                showHeartRateScreen -> HeartRateHeader(
+                    onBackClick = { showHeartRateScreen = false }
+                )
+                showBloodPressureScreen -> BloodPressureHeader(
+                    onBackClick = { showBloodPressureScreen = false }
+                )
+                showGlucoseScreen -> GlucoseHeader(
+                    onBackClick = { showGlucoseScreen = false }
+                )
                 showSettingsScreen -> SettingsHeader(
                     onBackClick = { showSettingsScreen = false }
                 )
