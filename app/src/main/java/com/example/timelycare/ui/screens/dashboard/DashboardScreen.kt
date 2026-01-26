@@ -14,9 +14,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.timelycare.data.Medication
 import com.example.timelycare.data.MedicationRepository
 import com.example.timelycare.ui.theme.TimelyCareTextPrimary
 import com.example.timelycare.ui.theme.TimelyCareTextSecondary
+import java.time.LocalTime
 
 @Composable
 fun DashboardScreen(
@@ -25,6 +27,13 @@ fun DashboardScreen(
     val context = LocalContext.current
     val medicationRepository = remember { MedicationRepository.getInstance(context) }
     val medications by medicationRepository.medications.collectAsStateWithLifecycle()
+
+    // Sort by time then name
+    val sortedMedicationTimes = medications
+        .flatMap { medication ->
+            medication.medicationTimes.map { time -> medication to time }
+        }
+        .sortedWith(compareBy<Pair<Medication, LocalTime>> { it.second }.thenBy { it.first.name })
 
     Column(
         modifier = Modifier
@@ -49,7 +58,7 @@ fun DashboardScreen(
                 color = TimelyCareTextPrimary
             )
 
-            if (medications.isEmpty()) {
+            if (sortedMedicationTimes.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -66,13 +75,12 @@ fun DashboardScreen(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    medications.forEach { medication ->
-                        medication.medicationTimes.forEach { time ->
-                            TodayMedicationCard(
-                                medication = medication,
-                                scheduledTime = time
-                            )
-                        }
+                    // Display each medication card in the sorted order
+                    sortedMedicationTimes.forEach { (medication, time) ->
+                        TodayMedicationCard(
+                            medication = medication,
+                            scheduledTime = time
+                        )
                     }
                 }
             }

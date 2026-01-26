@@ -31,28 +31,24 @@ fun MedicationListForDate(
     modifier: Modifier = Modifier
 ) {
     val medicationTimesForDate = try {
-        // Defensive null checks
-        if (medications == null) {
-            emptyList()
-        } else {
+        if (medications == null) emptyList()
+        else {
             val scheduledMedications = medications.filterNotNull().filter { medication ->
                 try {
                     isMedicationScheduledForDate(medication, selectedDate)
                 } catch (e: Exception) {
-                    // Skip this medication if filtering fails
                     false
                 }
             }
 
-            // Expand each medication to include all its times
+            // Flatten and sort by time
             scheduledMedications.flatMap { medication ->
                 medication.medicationTimes.map { time ->
                     Pair(medication, time)
                 }
-            }
+            }.sortedBy { it.second } // SORT BY LocalTime
         }
     } catch (e: Exception) {
-        // Log error and return empty list to prevent crash
         emptyList()
     }
 
