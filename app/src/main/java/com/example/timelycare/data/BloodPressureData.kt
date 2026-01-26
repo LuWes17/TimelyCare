@@ -36,7 +36,11 @@ data class BloodPressureReading(
         }
 
     val overallCategory: BPCategory
-        get() = if (systolicCategory.ordinal > diastolicCategory.ordinal) systolicCategory else diastolicCategory
+        get() =
+            if (systolicCategory.ordinal > diastolicCategory.ordinal)
+                systolicCategory
+            else
+                diastolicCategory
 
     val statusDisplay: String
         get() = "${systolicCategory.displayName} • ${diastolicCategory.displayName}"
@@ -78,26 +82,30 @@ enum class RiskLevel(val displayName: String) {
 }
 
 object BloodPressureDataGenerator {
+
+    private val DAY_FORMATTER =
+        DateTimeFormatter.ofPattern("EEE, MMM d")
+
     fun getCurrentReading(): BloodPressureReading {
         return BloodPressureReading(
             systolic = 120,
             diastolic = 80,
             pulse = 79,
-            timestamp = "Current",
+            timestamp = "Now",
             category = BPCategory.ELEVATED
         )
     }
 
     fun getTodayData(): DailyBPData {
         val hourlyReadings = listOf(
-            BloodPressureReading(112, 71, 75, "6AM", BPCategory.NORMAL),
-            BloodPressureReading(119, 77, 78, "8AM", BPCategory.NORMAL),
-            BloodPressureReading(121, 78, 80, "10AM", BPCategory.ELEVATED),
-            BloodPressureReading(123, 79, 82, "12PM", BPCategory.ELEVATED),
-            BloodPressureReading(120, 80, 79, "2PM", BPCategory.ELEVATED),
-            BloodPressureReading(118, 78, 77, "4PM", BPCategory.NORMAL),
-            BloodPressureReading(115, 75, 74, "6PM", BPCategory.NORMAL),
-            BloodPressureReading(113, 73, 72, "8PM", BPCategory.NORMAL)
+            BloodPressureReading(112, 71, 75, "6 AM", BPCategory.NORMAL),
+            BloodPressureReading(119, 77, 78, "8 AM", BPCategory.NORMAL),
+            BloodPressureReading(121, 78, 80, "10 AM", BPCategory.ELEVATED),
+            BloodPressureReading(123, 79, 82, "12 PM", BPCategory.ELEVATED),
+            BloodPressureReading(120, 80, 79, "2 PM", BPCategory.ELEVATED),
+            BloodPressureReading(118, 78, 77, "4 PM", BPCategory.NORMAL),
+            BloodPressureReading(115, 75, 74, "6 PM", BPCategory.NORMAL),
+            BloodPressureReading(113, 73, 72, "8 PM", BPCategory.NORMAL)
         )
 
         val current = getCurrentReading()
@@ -124,60 +132,64 @@ object BloodPressureDataGenerator {
 
     fun getHistoricalReadings(): List<HistoricalBPReading> {
         val today = LocalDate.now()
-        return listOf(
-            HistoricalBPReading(
-                date = today,
-                displayDate = "Today",
-                reading = BloodPressureReading(120, 80, 79, "Today", BPCategory.ELEVATED)
-            ),
-            HistoricalBPReading(
-                date = today.minusDays(1),
-                displayDate = "Yesterday",
-                reading = BloodPressureReading(121, 82, 83, "Yesterday", BPCategory.ELEVATED)
-            ),
-            HistoricalBPReading(
-                date = today.minusDays(2),
-                displayDate = "Mon, Nov 10",
-                reading = BloodPressureReading(119, 77, 78, "Mon", BPCategory.NORMAL)
-            ),
-            HistoricalBPReading(
-                date = today.minusDays(3),
-                displayDate = "Sun, Nov 9",
-                reading = BloodPressureReading(125, 79, 81, "Sun", BPCategory.ELEVATED)
-            ),
-            HistoricalBPReading(
-                date = today.minusDays(4),
-                displayDate = "Sat, Nov 8",
-                reading = BloodPressureReading(120, 80, 79, "Sat", BPCategory.ELEVATED)
-            ),
-            HistoricalBPReading(
-                date = today.minusDays(5),
-                displayDate = "Fri, Nov 7",
-                reading = BloodPressureReading(115, 75, 74, "Fri", BPCategory.NORMAL)
-            ),
-            HistoricalBPReading(
-                date = today.minusDays(6),
-                displayDate = "Thu, Nov 6",
-                reading = BloodPressureReading(122, 81, 82, "Thu", BPCategory.ELEVATED)
-            ),
-            HistoricalBPReading(
-                date = today.minusDays(7),
-                displayDate = "Wed, Nov 5",
-                reading = BloodPressureReading(118, 78, 76, "Wed", BPCategory.NORMAL)
-            )
+
+        val sampleValues = listOf(
+            Triple(120, 80, 79),
+            Triple(121, 82, 83),
+            Triple(119, 77, 78),
+            Triple(125, 79, 81),
+            Triple(120, 80, 79),
+            Triple(115, 75, 74),
+            Triple(122, 81, 82),
+            Triple(118, 78, 76)
         )
+
+        fun displayLabel(date: LocalDate): String =
+            when (date) {
+                today -> "Today"
+                today.minusDays(1) -> "Yesterday"
+                else -> date.format(DAY_FORMATTER)
+            }
+
+        return (0..7).map { daysAgo ->
+            val date = today.minusDays(daysAgo.toLong())
+            val (sys, dia, pulse) = sampleValues[daysAgo]
+
+            HistoricalBPReading(
+                date = date,
+                displayDate = displayLabel(date),
+                reading = BloodPressureReading(
+                    systolic = sys,
+                    diastolic = dia,
+                    pulse = pulse,
+                    timestamp = displayLabel(date),
+                    category = when {
+                        sys < 120 && dia < 80 -> BPCategory.NORMAL
+                        sys in 120..129 || dia in 80..89 -> BPCategory.ELEVATED
+                        else -> BPCategory.HIGH
+                    }
+                )
+            )
+        }
     }
 }
 
 class BloodPressureRepository private constructor() {
-    private val _todayData = MutableStateFlow(BloodPressureDataGenerator.getTodayData())
-    val todayData: StateFlow<DailyBPData> = _todayData.asStateFlow()
 
-    private val _riskAssessment = MutableStateFlow(BloodPressureDataGenerator.getRiskAssessment())
-    val riskAssessment: StateFlow<BPRiskAssessment> = _riskAssessment.asStateFlow()
+    private val _todayData =
+        MutableStateFlow(BloodPressureDataGenerator.getTodayData())
+    val todayData: StateFlow<DailyBPData> =
+        _todayData.asStateFlow()
 
-    private val _historicalReadings = MutableStateFlow(BloodPressureDataGenerator.getHistoricalReadings())
-    val historicalReadings: StateFlow<List<HistoricalBPReading>> = _historicalReadings.asStateFlow()
+    private val _riskAssessment =
+        MutableStateFlow(BloodPressureDataGenerator.getRiskAssessment())
+    val riskAssessment: StateFlow<BPRiskAssessment> =
+        _riskAssessment.asStateFlow()
+
+    private val _historicalReadings =
+        MutableStateFlow(BloodPressureDataGenerator.getHistoricalReadings())
+    val historicalReadings: StateFlow<List<HistoricalBPReading>> =
+        _historicalReadings.asStateFlow()
 
     companion object {
         @Volatile
