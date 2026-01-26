@@ -29,7 +29,7 @@ class MedicationRepository private constructor(
     }
 
     init {
-        //loadSampleMedicationsIfEmpty()
+        loadSampleMedicationsIfEmpty()
     }
     fun addMedication(medication: Medication) {
         _medications.value = _medications.value + medication

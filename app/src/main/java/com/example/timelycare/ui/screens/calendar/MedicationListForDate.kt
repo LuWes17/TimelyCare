@@ -111,16 +111,28 @@ private fun CalendarMedicationCard(
     val takenRepository = remember { MedicationTakenRepository.getInstance(context) }
     val takenRecords by takenRepository.takenRecords.collectAsStateWithLifecycle()
 
+    val now = LocalTime.now()
+    val today = LocalDate.now()
+
     val isTaken by remember(takenRecords, date, medication.id, scheduledTime) {
         derivedStateOf {
             takenRepository.isMedicationTaken(medication.id, scheduledTime, date)
         }
     }
+
+    // Determine status text
+    val statusText = when {
+        isTaken -> "Taken"
+        date.isAfter(today) -> "Upcoming" // Future dates
+        date.isBefore(today) -> "Missed"  // Past dates
+        date == today && now.isBefore(scheduledTime) -> "Upcoming" // Today but time not passed
+        date == today && now.isAfter(scheduledTime) -> "Missed"    // Today but time passed
+        else -> ""
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = TimelyCareWhite
-        ),
+        colors = CardDefaults.cardColors(containerColor = TimelyCareWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp),
         border = if (isTaken) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4CAF50)) else null
@@ -146,12 +158,10 @@ private fun CalendarMedicationCard(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Simple pill representation
                     Box(
                         modifier = Modifier.size(20.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        // Pill body (rectangle with rounded ends)
                         Box(
                             modifier = Modifier
                                 .width(16.dp)
@@ -161,7 +171,6 @@ private fun CalendarMedicationCard(
                                     shape = RoundedCornerShape(3.dp)
                                 )
                         )
-                        // Pill cap (top half)
                         Box(
                             modifier = Modifier
                                 .width(8.dp)
@@ -200,12 +209,19 @@ private fun CalendarMedicationCard(
                 }
             }
 
-            Text(
-                text = if (isTaken) "Taken" else "Upcoming",
-                fontSize = 14.sp,
-                color = if (isTaken) Color(0xFF4CAF50) else TimelyCareTextSecondary,
-                fontWeight = FontWeight.Medium
-            )
+            if (statusText.isNotEmpty()) {
+                Text(
+                    text = statusText,
+                    fontSize = 14.sp,
+                    color = when (statusText) {
+                        "Taken" -> Color(0xFF4CAF50)
+                        "Upcoming" -> TimelyCareTextSecondary
+                        "Missed" -> Color(0xFFF44336)
+                        else -> TimelyCareTextSecondary
+                    },
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
