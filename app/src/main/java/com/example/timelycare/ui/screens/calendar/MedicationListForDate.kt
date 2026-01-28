@@ -30,37 +30,29 @@ fun MedicationListForDate(
     medications: List<Medication>,
     modifier: Modifier = Modifier
 ) {
+    val now = LocalTime.now()
+    val today = LocalDate.now()
+
     val medicationTimesForDate = try {
         if (medications == null) emptyList()
         else {
             val scheduledMedications = medications.filterNotNull().filter { medication ->
-                try {
-                    isMedicationScheduledForDate(medication, selectedDate)
-                } catch (e: Exception) {
-                    false
-                }
+                isMedicationScheduledForDate(medication, selectedDate)
             }
 
-            // Flatten and sort by time
             scheduledMedications.flatMap { medication ->
                 medication.medicationTimes.map { time ->
                     Pair(medication, time)
                 }
-            }.sortedBy { it.second } // SORT BY LocalTime
+            }.sortedBy { it.second } // SORT BY TIME
         }
     } catch (e: Exception) {
         emptyList()
     }
 
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = try {
-                "Medications for ${selectedDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))}"
-            } catch (e: Exception) {
-                "Medications for ${selectedDate.toString()}"
-            },
+            text = "Medications for ${selectedDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))}",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = TimelyCareTextPrimary,
@@ -82,12 +74,13 @@ fun MedicationListForDate(
             }
         } else {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 20.dp)
             ) {
-                items(medicationTimesForDate) { (medication, time) ->
+                items(medicationTimesForDate) { (medication, scheduledTime) ->
                     CalendarMedicationCard(
                         medication = medication,
-                        scheduledTime = time,
+                        scheduledTime = scheduledTime,
                         date = selectedDate
                     )
                 }

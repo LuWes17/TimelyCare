@@ -3,8 +3,6 @@ package com.example.timelycare.ui.screens.dashboard
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,37 +26,43 @@ fun DashboardScreen(
     val medicationRepository = remember { MedicationRepository.getInstance(context) }
     val medications by medicationRepository.medications.collectAsStateWithLifecycle()
 
-    // Sort by time then name
     val sortedMedicationTimes = medications
         .flatMap { medication ->
             medication.medicationTimes.map { time -> medication to time }
         }
-        .sortedWith(compareBy<Pair<Medication, LocalTime>> { it.second }.thenBy { it.first.name })
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        // Health Metrics Section
-        HealthMetricsSection(
-            onMetricClick = onHealthMetricClick
+        .sortedWith(
+            compareBy<Pair<Medication, LocalTime>> { it.second }
+                .thenBy { it.first.name }
         )
 
-        // Today's Schedule Section
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        contentPadding = PaddingValues(bottom = 20.dp)
+    ) {
+
+        // Health Metrics Section
+        item {
+            HealthMetricsSection(
+                onMetricClick = onHealthMetricClick
+            )
+        }
+
+        // Title
+        item {
             Text(
                 text = "Today's Schedule",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = TimelyCareTextPrimary
             )
+        }
 
-            if (sortedMedicationTimes.isEmpty()) {
+        // Empty state
+        if (sortedMedicationTimes.isEmpty()) {
+            item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -71,18 +75,14 @@ fun DashboardScreen(
                         color = TimelyCareTextSecondary
                     )
                 }
-            } else {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Display each medication card in the sorted order
-                    sortedMedicationTimes.forEach { (medication, time) ->
-                        TodayMedicationCard(
-                            medication = medication,
-                            scheduledTime = time
-                        )
-                    }
-                }
+            }
+        } else {
+            // Medication cards
+            items(sortedMedicationTimes) { (medication, time) ->
+                TodayMedicationCard(
+                    medication = medication,
+                    scheduledTime = time
+                )
             }
         }
     }

@@ -1,14 +1,12 @@
 package com.example.timelycare.ui.screens.bloodpressure
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,9 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.timelycare.data.BloodPressureReading
-import com.example.timelycare.data.BloodPressureRepository
-import com.example.timelycare.data.DailyBPData
+import com.example.timelycare.data.*
 import com.example.timelycare.ui.theme.*
 import java.time.LocalDate
 import kotlin.random.Random
@@ -31,25 +27,28 @@ fun BloodPressureScreen(
     modifier: Modifier = Modifier
 ) {
     val repository = remember { BloodPressureRepository.getInstance() }
+
     val todayData by repository.todayData.collectAsStateWithLifecycle()
     val riskAssessment by repository.riskAssessment.collectAsStateWithLifecycle()
     val historicalReadings by repository.historicalReadings.collectAsStateWithLifecycle()
+
     val dateNavItems = remember(todayData.date, historicalReadings) {
-        buildList {
-            add(DateNavItem(todayData.date, "Today"))
-            historicalReadings.forEach { reading ->
-                add(DateNavItem(reading.date, reading.displayDate))
-            }
+        val items = mutableListOf<DateNavItem>()
+        items.add(DateNavItem(todayData.date, "Today"))
+        historicalReadings.forEach {
+            items.add(DateNavItem(it.date, it.displayDate))
         }
+        items
     }
+
     var selectedNavIndex by remember(dateNavItems) { mutableIntStateOf(0) }
+
     LaunchedEffect(dateNavItems.size) {
         if (dateNavItems.isNotEmpty()) {
             selectedNavIndex = selectedNavIndex.coerceIn(0, dateNavItems.lastIndex)
         }
     }
 
-    // Determine which day's data to display based on the selected date
     val selectedDailyData = remember(todayData, dateNavItems, selectedNavIndex) {
         if (dateNavItems.isEmpty()) {
             todayData
@@ -63,69 +62,62 @@ fun BloodPressureScreen(
         }
     }
 
-    Column(
-        modifier = modifier.fillMaxSize()
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(bottom = 20.dp)
     ) {
-        // Content
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Date Navigation
+
+        item {
             DateNavigationCard(
                 items = dateNavItems,
                 selectedIndex = selectedNavIndex,
                 onPrevious = {
-                    if (selectedNavIndex > 0) {
-                        selectedNavIndex--
-                    }
+                    if (selectedNavIndex > 0) selectedNavIndex--
                 },
                 onNext = {
-                    if (selectedNavIndex < dateNavItems.lastIndex) {
-                        selectedNavIndex++
-                    }
+                    if (selectedNavIndex < dateNavItems.lastIndex) selectedNavIndex++
                 }
             )
-
-            // Current Reading Card
-            CurrentBPReadingCard(dailyData = selectedDailyData)
-
-            // Daily BP Chart
-            DailyBPChart(dailyData = selectedDailyData)
-
-            // Blood Pressure Ranges
-            BPRangesCard(dailyData = selectedDailyData)
-
-            // Risk Assessment
-            RiskAssessmentCard(riskAssessment = riskAssessment)
-
-            // Past Week History
-            PastWeekBPHistory(historicalReadings = historicalReadings)
         }
+
+        item { CurrentBPReadingCard(dailyData = selectedDailyData) }
+
+        item { DailyBPChart(dailyData = selectedDailyData) }
+
+        item { BPRangesCard(dailyData = selectedDailyData) }
+
+        item { RiskAssessmentCard(riskAssessment = riskAssessment) }
+
+        item { PastWeekBPHistory(historicalReadings = historicalReadings) }
     }
 }
 
-private fun generateSyntheticDailyBPData(template: DailyBPData, targetDate: LocalDate): DailyBPData {
+private data class DateNavItem(
+    val date: LocalDate,
+    val label: String
+)
+
+private fun generateSyntheticDailyBPData(
+    template: DailyBPData,
+    targetDate: LocalDate
+): DailyBPData {
     val random = Random(targetDate.toEpochDay())
 
-    fun adjustReading(reading: BloodPressureReading): BloodPressureReading {
-        val systolicDelta = random.nextInt(-6, 7)
-        val diastolicDelta = random.nextInt(-4, 5)
-        val pulseDelta = random.nextInt(-6, 7)
-        val newSystolic = (reading.systolic + systolicDelta).coerceIn(105, 145)
-        val newDiastolic = (reading.diastolic + diastolicDelta).coerceIn(65, 95)
-        val newPulse = (reading.pulse + pulseDelta).coerceIn(60, 110)
-        return reading.copy(
-            systolic = newSystolic,
-            diastolic = newDiastolic,
-            pulse = newPulse
+    val readings = template.readings.map { reading ->
+        val systolic = (reading.systolic + random.nextInt(-6, 7)).coerceIn(105, 145)
+        val diastolic = (reading.diastolic + random.nextInt(-4, 5)).coerceIn(65, 95)
+        val pulse = (reading.pulse + random.nextInt(-6, 7)).coerceIn(60, 110)
+
+        reading.copy(
+            systolic = systolic,
+            diastolic = diastolic,
+            pulse = pulse
         )
     }
 
-    val readings = template.readings.map { adjustReading(it) }
     val avgSystolic = readings.map { it.systolic }.average().toInt()
     val avgDiastolic = readings.map { it.diastolic }.average().toInt()
     val avgPulse = readings.map { it.pulse }.average().toInt()
@@ -151,7 +143,6 @@ private fun generateSyntheticDailyBPData(template: DailyBPData, targetDate: Loca
     )
 }
 
-private data class DateNavItem(val date: LocalDate, val label: String)
 @Composable
 private fun DateNavigationCard(
     items: List<DateNavItem>,
@@ -161,95 +152,69 @@ private fun DateNavigationCard(
     modifier: Modifier = Modifier
 ) {
     val hasItems = items.isNotEmpty()
-    val currentLabel = if (hasItems) items[selectedIndex].label else "Today"
-    val positionLabel = if (hasItems) "${selectedIndex + 1} of ${items.size}" else "0 of 0"
+    val label = if (hasItems) items[selectedIndex].label else "Today"
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = TimelyCareWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(2.dp),
+        shape = MaterialTheme.shapes.medium
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = onPrevious,
-                enabled = hasItems && selectedIndex > 0
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowLeft,
-                    contentDescription = "Previous day",
-                    tint = TimelyCareTextSecondary
-                )
+                IconButton(onClick = onPrevious, enabled = hasItems && selectedIndex > 0) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, null)
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = null,
+                        tint = TimelyCareBlue,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = label,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TimelyCareTextPrimary
+                    )
+                }
+
+                IconButton(
+                    onClick = onNext,
+                    enabled = hasItems && selectedIndex < items.lastIndex
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null)
+                }
             }
 
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.DateRange,
-                    contentDescription = "Calendar",
-                    tint = TimelyCareBlue,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = currentLabel,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TimelyCareTextPrimary
-                )
-            }
-
-            IconButton(
-                onClick = onNext,
-                enabled = hasItems && selectedIndex < items.lastIndex
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Next day",
-                    tint = TimelyCareTextSecondary
-                )
-            }
-        }
-
-        // Pagination dots
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            items.forEachIndexed { index, _ ->
-                val isActive = index == selectedIndex
-                Box(
-                    modifier = Modifier
-                        .size(if (isActive) 8.dp else 6.dp)
-                        .padding(horizontal = 2.dp)
-                ) {
-                    androidx.compose.foundation.Canvas(
-                        modifier = Modifier.fillMaxSize()
+                items.forEachIndexed { index, _ ->
+                    val active = index == selectedIndex
+                    Canvas(
+                        modifier = Modifier
+                            .size(if (active) 8.dp else 6.dp)
+                            .padding(horizontal = 2.dp)
                     ) {
                         drawCircle(
-                            color = if (isActive) Color(0xFF4299E1) else Color(0xFFE2E8F0),
-                            radius = size.minDimension / 2
+                            color = if (active) TimelyCareBlue else Color(0xFFE2E8F0)
                         )
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = positionLabel,
-                fontSize = 12.sp,
-                color = TimelyCareTextSecondary
-            )
         }
     }
 }

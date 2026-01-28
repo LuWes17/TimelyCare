@@ -1,14 +1,12 @@
 package com.example.timelycare.ui.screens.glucose
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,10 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.timelycare.data.DailyGlucoseData
-import com.example.timelycare.data.GlucoseReading
-import com.example.timelycare.data.GlucoseRepository
-import com.example.timelycare.data.GlucoseCategory
+import com.example.timelycare.data.*
 import com.example.timelycare.ui.theme.*
 import java.time.LocalDate
 import kotlin.random.Random
@@ -34,6 +29,7 @@ fun GlucoseScreen(
     val repository = remember { GlucoseRepository.getInstance() }
     val todayData by repository.todayData.collectAsStateWithLifecycle()
     val historicalReadings by repository.historicalReadings.collectAsStateWithLifecycle()
+
     val dateNavItems = remember(todayData.date, historicalReadings) {
         val items = historicalReadings.map {
             DateNavItem(it.date, it.displayDate)
@@ -43,14 +39,15 @@ fun GlucoseScreen(
         }
         items
     }
+
     var selectedNavIndex by remember(dateNavItems) { mutableIntStateOf(0) }
+
     LaunchedEffect(dateNavItems.size) {
         if (dateNavItems.isNotEmpty()) {
             selectedNavIndex = selectedNavIndex.coerceIn(0, dateNavItems.lastIndex)
         }
     }
 
-    // Determine which day's data to display based on the selected date
     val selectedDailyData = remember(todayData, dateNavItems, selectedNavIndex) {
         if (dateNavItems.isEmpty()) {
             todayData
@@ -67,43 +64,43 @@ fun GlucoseScreen(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        // Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
             // Date Navigation
             DateNavigationCard(
                 items = dateNavItems,
                 selectedIndex = selectedNavIndex,
                 onPrevious = {
-                    if (selectedNavIndex > 0) {
-                        selectedNavIndex--
-                    }
+                    if (selectedNavIndex > 0) selectedNavIndex--
                 },
                 onNext = {
-                    if (selectedNavIndex < dateNavItems.lastIndex) {
-                        selectedNavIndex++
-                    }
+                    if (selectedNavIndex < dateNavItems.lastIndex) selectedNavIndex++
                 }
             )
 
-            // Current Glucose Reading Card
+            // Current Glucose Reading
             CurrentGlucoseReadingCard(dailyData = selectedDailyData)
 
-            // Daily Glucose Chart
+            // Chart
             DailyGlucoseChart(dailyData = selectedDailyData)
 
-            // Past Week History
+            // History
             PastWeekGlucoseHistory(historicalReadings = historicalReadings)
         }
     }
 }
 
-private fun generateSyntheticDailyGlucoseData(template: DailyGlucoseData, targetDate: LocalDate): DailyGlucoseData {
+private fun generateSyntheticDailyGlucoseData(
+    template: DailyGlucoseData,
+    targetDate: LocalDate
+): DailyGlucoseData {
     val random = Random(targetDate.toEpochDay())
 
     fun categorize(value: Int): GlucoseCategory = when {
@@ -126,17 +123,12 @@ private fun generateSyntheticDailyGlucoseData(template: DailyGlucoseData, target
     val minReading = readings.minByOrNull { it.value } ?: readings.first()
     val maxReading = readings.maxByOrNull { it.value } ?: readings.last()
     val current = readings.lastOrNull() ?: readings.first()
-    val averageReading = GlucoseReading(
-        value = average,
-        timestamp = "Average",
-        category = categorize(average)
-    )
 
     return template.copy(
         date = targetDate,
         readings = readings,
         current = current,
-        average = averageReading,
+        average = GlucoseReading(average, "Average", categorize(average)),
         min = minReading,
         max = maxReading
     )
@@ -155,6 +147,7 @@ private fun DateNavigationCard(
     val hasItems = items.isNotEmpty()
     val currentLabel = if (hasItems) items[selectedIndex].label else "Today"
     val positionLabel = if (hasItems) "${selectedIndex + 1} of ${items.size}" else "0 of 0"
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = TimelyCareWhite),
@@ -168,48 +161,20 @@ private fun DateNavigationCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = onPrevious,
-                enabled = hasItems && selectedIndex > 0
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowLeft,
-                    contentDescription = "Previous day",
-                    tint = TimelyCareTextSecondary
-                )
+            IconButton(onClick = onPrevious, enabled = hasItems && selectedIndex > 0) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Previous", tint = TimelyCareTextSecondary)
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.DateRange,
-                    contentDescription = "Calendar",
-                    tint = TimelyCareBlue,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = currentLabel,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TimelyCareTextPrimary
-                )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.DateRange, "Calendar", tint = TimelyCareBlue, modifier = Modifier.size(20.dp))
+                Text(currentLabel, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
 
-            IconButton(
-                onClick = onNext,
-                enabled = hasItems && selectedIndex < items.lastIndex
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Next day",
-                    tint = TimelyCareTextSecondary
-                )
+            IconButton(onClick = onNext, enabled = hasItems && selectedIndex < items.lastIndex) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Next", tint = TimelyCareTextSecondary)
             }
         }
 
-        // Pagination dots
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -218,17 +183,15 @@ private fun DateNavigationCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEachIndexed { index, _ ->
-                val isActive = index == selectedIndex
+                val active = index == selectedIndex
                 Box(
                     modifier = Modifier
-                        .size(if (isActive) 8.dp else 6.dp)
+                        .size(if (active) 8.dp else 6.dp)
                         .padding(horizontal = 2.dp)
                 ) {
-                    androidx.compose.foundation.Canvas(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
+                    androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
                         drawCircle(
-                            color = if (isActive) Color(0xFF4299E1) else Color(0xFFE2E8F0),
+                            color = if (active) Color(0xFF4299E1) else Color(0xFFE2E8F0),
                             radius = size.minDimension / 2
                         )
                     }
@@ -236,12 +199,7 @@ private fun DateNavigationCard(
             }
 
             Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = positionLabel,
-                fontSize = 12.sp,
-                color = TimelyCareTextSecondary
-            )
+            Text(positionLabel, fontSize = 12.sp, color = TimelyCareTextSecondary)
         }
     }
 }

@@ -68,7 +68,8 @@ fun MedicationsScreen(onAddClick: () -> Unit, onEditClick: (Medication) -> Unit)
         ) {
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 20.dp)
             ) {
                 items(medications) { medication ->
                     MedicationCard(
