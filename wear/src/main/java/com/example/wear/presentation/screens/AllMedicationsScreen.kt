@@ -189,13 +189,20 @@ private fun MedicationCard(
 
             Spacer(modifier = Modifier.height(2.dp)) // Reduced spacing
 
-            Text(
-                text = medication.time,
-                style = MaterialTheme.typography.caption1, // Smaller text
-                color = MaterialTheme.colors.onSurface,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center
-            )
+            // Display all medication times
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                medication.medicationTimes.forEach { time ->
+                    Text(
+                        text = time,
+                        style = MaterialTheme.typography.caption1, // Smaller text
+                        color = MaterialTheme.colors.onSurface,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
             if (medication.isMaintenanceMed) {
                 Spacer(modifier = Modifier.height(4.dp)) // Reduced spacing

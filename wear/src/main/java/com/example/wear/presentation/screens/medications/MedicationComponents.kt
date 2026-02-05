@@ -22,6 +22,7 @@ import com.example.wear.Medication
 fun UpcomingMedicationCard(
     medication: Medication,
     isMaintenanceMed: Boolean,
+    scheduledTime: String,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -68,7 +69,7 @@ fun UpcomingMedicationCard(
 
             // Time
             Text(
-                text = medication.time,
+                text = scheduledTime,
                 style = MaterialTheme.typography.body2,
                 color = MaterialTheme.colors.primary,
                 fontWeight = FontWeight.Medium,
@@ -133,7 +134,7 @@ fun MaintenanceMedicationCard(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "${medication.dosage} • ${medication.time}",
+                    text = "${medication.dosage} • ${medication.medicationTimes.joinToString(", ")}",
                     style = MaterialTheme.typography.body2,
                     color = MaterialTheme.colors.onSurfaceVariant,
                     maxLines = 1

@@ -14,7 +14,6 @@ import com.example.wear.presentation.screens.medications.UpcomingScreen
 import com.example.wear.presentation.screens.MedicineReminderScreen
 import com.example.wear.presentation.theme.TimelyCareTheme
 import com.example.wear.MedicineReminder
-import kotlinx.coroutines.delay
 import androidx.compose.runtime.LaunchedEffect
 
 enum class Screen {
@@ -41,18 +40,6 @@ fun AppNavigation() {
     // Track screen changes for analytics
     LaunchedEffect(currentScreen) {
         analyticsRepository.recordScreenView(currentScreen.name)
-    }
-
-    // 5-second reminder simulation
-    LaunchedEffect(Unit) {
-        delay(5000) // 5 seconds
-        val simulatedReminder = MedicineReminder(
-            id = "sim_reminder_1",
-            medicineName = "Biogesic",
-            dosage = "50mg",
-            scheduledTime = "Now"
-        )
-        medicationRepository.triggerReminder(simulatedReminder)
     }
 
     TimelyCareTheme(

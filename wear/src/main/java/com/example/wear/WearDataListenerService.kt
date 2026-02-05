@@ -5,22 +5,38 @@ import com.google.android.gms.wearable.*
 class WearDataListenerService : WearableListenerService() {
 
     companion object {
+        private const val TAG = "WearDataListener"
         private const val MEDICATION_PATH = "/medication_data"
         private const val MEDICATION_KEY = "medications"
         private const val TAKEN_RECORDS_PATH = "/taken_records"
         private const val TAKEN_RECORDS_KEY = "taken_records"
+        private const val EMERGENCY_CONTACTS_PATH = "/emergency_contacts"
+        private const val EMERGENCY_CONTACTS_KEY = "emergency_contacts"
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        android.util.Log.d(TAG, "WearDataListenerService created")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        android.util.Log.d(TAG, "WearDataListenerService destroyed")
     }
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         super.onDataChanged(dataEvents)
 
-        android.util.Log.d("WearDataListener", "onDataChanged called with ${dataEvents.count} events")
+        android.util.Log.d(TAG, "================================================")
+        android.util.Log.d(TAG, "onDataChanged called with ${dataEvents.count} events")
+        android.util.Log.d(TAG, "================================================")
 
         dataEvents.forEach { event ->
-            android.util.Log.d("WearDataListener", "Processing event type: ${event.type}")
+            android.util.Log.d(TAG, "Processing event type: ${event.type}")
             if (event.type == DataEvent.TYPE_CHANGED) {
                 val item = event.dataItem
-                android.util.Log.d("WearDataListener", "Data item path: ${item.uri.path}")
+                android.util.Log.d(TAG, "Data item URI: ${item.uri}")
+                android.util.Log.d(TAG, "Data item path: ${item.uri.path}")
                 when (item.uri.path) {
                     MEDICATION_PATH -> {
                         val dataMap = DataMapItem.fromDataItem(item).dataMap
@@ -44,6 +60,17 @@ class WearDataListenerService : WearableListenerService() {
                         // Update local storage
                         updateWatchTakenRecords(takenRecords)
                     }
+                    EMERGENCY_CONTACTS_PATH -> {
+                        val dataMap = DataMapItem.fromDataItem(item).dataMap
+                        val contactsData = dataMap.getString(EMERGENCY_CONTACTS_KEY)
+                        android.util.Log.d("WearDataListener", "Received emergency contacts data: $contactsData")
+
+                        val contacts = parseEmergencyContacts(contactsData ?: "")
+                        android.util.Log.d("WearDataListener", "Parsed ${contacts.size} emergency contacts")
+
+                        // Update local storage
+                        updateWatchEmergencyContacts(contacts)
+                    }
                     else -> {
                         android.util.Log.d("WearDataListener", "Unknown path: ${item.uri.path}")
                     }
@@ -58,11 +85,17 @@ class WearDataListenerService : WearableListenerService() {
         return data.split("|").mapNotNull { medString ->
             val parts = medString.split(",")
             if (parts.size == 6) {
+                // Parse times: split by semicolon for multiple times, or use single time
+                val medicationTimes = if (parts[3].contains(";")) {
+                    parts[3].split(";")
+                } else {
+                    listOf(parts[3])
+                }
                 Medication(
                     id = parts[0],
                     name = parts[1],
                     dosage = parts[2],
-                    time = parts[3],
+                    medicationTimes = medicationTimes,
                     frequency = parts[4],
                     isMaintenanceMed = parts[5].toBoolean()
                 )
@@ -122,6 +155,36 @@ class WearDataListenerService : WearableListenerService() {
         // Log for debugging
         takenRecords.forEach { record ->
             android.util.Log.d("WearTakenRecords", "Received: ${record.medicationId} - ${record.takenDate} - ${record.scheduledTime}")
+        }
+    }
+
+    private fun parseEmergencyContacts(data: String): List<EmergencyContact> {
+        if (data.isEmpty()) return emptyList()
+
+        return data.split("|").mapNotNull { contactString ->
+            val parts = contactString.split(",")
+            if (parts.size == 5) {
+                EmergencyContact(
+                    id = parts[0],
+                    name = parts[1],
+                    relationship = parts[2],
+                    phoneNumber = parts[3],
+                    isPrimary = parts[4].toBoolean()
+                )
+            } else null
+        }
+    }
+
+    private fun updateWatchEmergencyContacts(contacts: List<EmergencyContact>) {
+        // Update repository using singleton
+        val repository = MedicationRepository.getInstance(this)
+        repository.updateEmergencyContacts(contacts)
+
+        android.util.Log.d("WearDataListener", "Updated repository with ${contacts.size} emergency contacts")
+
+        // Log for debugging
+        contacts.forEach { contact ->
+            android.util.Log.d("WearEmergencyContacts", "Received: ${contact.name} - ${contact.phoneNumber} - Primary: ${contact.isPrimary}")
         }
     }
 }

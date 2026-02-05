@@ -34,13 +34,20 @@ fun UpcomingScreen(onBackClick: () -> Unit) {
     val takenRecords by medicationRepository.takenRecords.collectAsState()
     val listState = rememberScalingLazyListState()
 
-    // Filter to show only medications that haven't been taken today
+    // Flatten medications into (medication, time) pairs and filter out taken doses
     val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val today = dateFormatter.format(Date())
 
-    val upcomingMedications = medications.filter { medication ->
-        !medicationRepository.isMedicationTaken(medication.id, medication.time, today)
+    // Create pairs of (medication, scheduledTime) and filter out taken ones
+    val medicationTimePairs = medications.flatMap { med ->
+        med.medicationTimes.map { time -> med to time }
+    }.filter { (med, time) ->
+        !medicationRepository.isMedicationTaken(med.id, time, today)
+    }.sortedBy { (_, time) ->
+        parseTimeToMinutes(time)
     }
+
+    val upcomingMedications = medicationTimePairs
 
     Box(
         modifier = Modifier
@@ -99,7 +106,7 @@ fun UpcomingScreen(onBackClick: () -> Unit) {
             ) {
                 item {
                     Text(
-                        text = "Upcoming Medications",
+                        text = "Upcoming medicine today",
                         style = MaterialTheme.typography.title2,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colors.onBackground,
@@ -110,9 +117,10 @@ fun UpcomingScreen(onBackClick: () -> Unit) {
                     )
                 }
 
-                items(upcomingMedications) { medication ->
+                items(upcomingMedications) { (medication, scheduledTime) ->
                     UpcomingMedicationCard(
                         medication = medication,
+                        scheduledTime = scheduledTime,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -145,6 +153,7 @@ fun UpcomingScreen(onBackClick: () -> Unit) {
 @Composable
 private fun UpcomingMedicationCard(
     medication: com.example.wear.Medication,
+    scheduledTime: String,
     modifier: Modifier = Modifier
 ) {
     val trackEvent = rememberAnalyticsTracker()
@@ -193,7 +202,7 @@ private fun UpcomingMedicationCard(
             Spacer(modifier = Modifier.height(2.dp)) // Reduced spacing
 
             Text(
-                text = medication.time,
+                text = scheduledTime,
                 style = MaterialTheme.typography.caption1, // Smaller text
                 color = MaterialTheme.colors.onSurface,
                 fontWeight = FontWeight.Medium,
@@ -218,5 +227,17 @@ private fun UpcomingMedicationCard(
                 }
             }
         }
+    }
+}
+
+// Helper function to parse time string to minutes for sorting
+private fun parseTimeToMinutes(timeString: String): Int {
+    return try {
+        val formatter = SimpleDateFormat("h:mm a", Locale.getDefault())
+        val time = formatter.parse(timeString) ?: return Int.MAX_VALUE
+        val calendar = Calendar.getInstance().apply { setTime(time) }
+        calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
+    } catch (e: Exception) {
+        Int.MAX_VALUE // Put unparseable times at the end
     }
 }

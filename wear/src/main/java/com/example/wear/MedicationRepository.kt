@@ -2,14 +2,21 @@ package com.example.wear
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import com.google.android.gms.wearable.*
+import com.example.wear.reminder.ReminderScheduler
 
 data class Medication(
     val id: String,
     val name: String,
     val dosage: String,
-    val time: String,
+    val medicationTimes: List<String>,
     val frequency: String,
     val isMaintenanceMed: Boolean = false
 )
@@ -38,6 +45,7 @@ data class EmergencyContact(
 )
 
 class MedicationRepository private constructor(context: Context) {
+    private val appContext = context.applicationContext
     private val prefs: SharedPreferences = context.getSharedPreferences("medications", Context.MODE_PRIVATE)
 
     private val _medications = MutableStateFlow<List<Medication>>(emptyList())
@@ -52,17 +60,159 @@ class MedicationRepository private constructor(context: Context) {
     private val _activeReminder = MutableStateFlow<MedicineReminder?>(null)
     val activeReminder: StateFlow<MedicineReminder?> = _activeReminder
 
+    private val dataListener = DataClient.OnDataChangedListener { dataEvents ->
+        Log.d("MedicationRepo", "Data changed callback received with ${dataEvents.count} events")
+        dataEvents.forEach { event ->
+            if (event.type == DataEvent.TYPE_CHANGED) {
+                val item = event.dataItem
+                Log.d("MedicationRepo", "Data changed: ${item.uri.path}")
+
+                when (item.uri.path) {
+                    "/medication_data" -> {
+                        val dataMap = DataMapItem.fromDataItem(item).dataMap
+                        val medicationsData = dataMap.getString("medications") ?: ""
+                        Log.d("MedicationRepo", "Received medications: $medicationsData")
+
+                        if (medicationsData.isNotEmpty()) {
+                            val medications = parseMedicationsFromJson(medicationsData)
+                            updateMedications(medications)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     init {
-        // Clear existing data and load fresh sample data
-        clearAllData()
-        addSampleMedications()
-        addSampleEmergencyContacts()
+        Log.d("MedicationRepo", "Repository init started")
+
+        // Load existing data from preferences
+        loadMedications()
+        Log.d("MedicationRepo", "Loaded medications from prefs")
+
+        loadTakenRecords()
+        Log.d("MedicationRepo", "Loaded taken records from prefs")
+
+        loadEmergencyContacts()
+        Log.d("MedicationRepo", "Loaded emergency contacts from prefs")
+
+        // Register data listener
+        try {
+            Wearable.getDataClient(appContext).addListener(dataListener)
+            Log.d("MedicationRepo", "Data listener registered")
+        } catch (e: Exception) {
+            Log.e("MedicationRepo", "Failed to register data listener", e)
+        }
+
+        // Poll for data every 5 seconds as a backup using coroutine
+        CoroutineScope(Dispatchers.IO).launch {
+            Log.d("MedicationRepo", "Data polling coroutine started")
+            while (true) {
+                try {
+                    pollForData()
+                } catch (e: Exception) {
+                    Log.e("MedicationRepo", "Polling error", e)
+                }
+                delay(5000)
+            }
+        }
+        Log.d("MedicationRepo", "Repository init completed")
+    }
+
+    private fun pollForData() {
+        Log.d("MedicationRepo", "Polling for data...")
+        Wearable.getDataClient(appContext).dataItems.addOnSuccessListener { dataItems ->
+            Log.d("MedicationRepo", "Poll successful - found ${dataItems.count} data items")
+            if (dataItems.count > 0) {
+                Log.d("MedicationRepo", "Processing ${dataItems.count} data items")
+            }
+
+            dataItems.forEach { item ->
+                when (item.uri.path) {
+                    "/medication_data" -> {
+                        val dataMap = DataMapItem.fromDataItem(item).dataMap
+                        val medicationsData = dataMap.getString("medications") ?: ""
+                        val timestamp = dataMap.getLong("timestamp", 0)
+
+                        // Check if this is new data
+                        val lastTimestamp = prefs.getLong("last_medication_sync", 0)
+                        if (timestamp > lastTimestamp) {
+                            Log.d("MedicationRepo", "Found NEW medication data via polling: $medicationsData")
+
+                            if (medicationsData.isNotEmpty()) {
+                                val medications = parseMedicationsFromJson(medicationsData)
+                                updateMedications(medications)
+                                prefs.edit().putLong("last_medication_sync", timestamp).apply()
+                            } else {
+                                // Empty data means all medications were deleted
+                                Log.d("MedicationRepo", "Clearing all medications")
+                                updateMedications(emptyList())
+                                prefs.edit().putLong("last_medication_sync", timestamp).apply()
+                            }
+                        }
+                    }
+                    "/taken_records" -> {
+                        val dataMap = DataMapItem.fromDataItem(item).dataMap
+                        val takenRecordsData = dataMap.getString("taken_records") ?: ""
+                        val timestamp = dataMap.getLong("timestamp", 0)
+
+                        val lastTimestamp = prefs.getLong("last_taken_sync", 0)
+                        if (timestamp > lastTimestamp) {
+                            Log.d("MedicationRepo", "Found NEW taken records via polling")
+                            val takenRecords = parseTakenRecordsFromJson(takenRecordsData)
+                            updateTakenRecords(takenRecords)
+                            prefs.edit().putLong("last_taken_sync", timestamp).apply()
+                        }
+                    }
+                    "/emergency_contacts" -> {
+                        val dataMap = DataMapItem.fromDataItem(item).dataMap
+                        val contactsData = dataMap.getString("emergency_contacts") ?: ""
+                        val timestamp = dataMap.getLong("timestamp", 0)
+
+                        val lastTimestamp = prefs.getLong("last_contacts_sync", 0)
+                        if (timestamp > lastTimestamp) {
+                            Log.d("MedicationRepo", "Found NEW emergency contacts via polling")
+                            val contacts = parseEmergencyContactsFromJson(contactsData)
+                            updateEmergencyContacts(contacts)
+                            prefs.edit().putLong("last_contacts_sync", timestamp).apply()
+                        }
+                    }
+                }
+            }
+            dataItems.release()
+        }.addOnFailureListener { e ->
+            Log.e("MedicationRepo", "Polling failed: ${e.message}")
+        }
+    }
+
+    private fun parseTakenRecordsFromJson(data: String): List<MedicationTakenRecord> {
+        return parseTakenRecords(data)
+    }
+
+    private fun parseEmergencyContactsFromJson(data: String): List<EmergencyContact> {
+        if (data.isEmpty()) return emptyList()
+
+        return data.split("|").mapNotNull { contactString ->
+            val parts = contactString.split(",")
+            if (parts.size == 5) {
+                EmergencyContact(
+                    id = parts[0],
+                    name = parts[1],
+                    relationship = parts[2],
+                    phoneNumber = parts[3],
+                    isPrimary = parts[4].toBoolean()
+                )
+            } else null
+        }
     }
 
     fun updateMedications(medications: List<Medication>) {
         android.util.Log.d("WearMedicationRepo", "Updating medications: ${medications.size} items")
         _medications.value = medications
         saveMedications(medications)
+
+        // Schedule reminders for all medications
+        ReminderScheduler(appContext).scheduleReminders(medications)
     }
 
     fun updateTakenRecords(takenRecords: List<MedicationTakenRecord>) {
@@ -108,13 +258,6 @@ class MedicationRepository private constructor(context: Context) {
         _activeReminder.value = null
     }
 
-    private fun clearAllData() {
-        android.util.Log.d("WearMedicationRepo", "Clearing all existing data")
-        prefs.edit().clear().apply()
-        _medications.value = emptyList()
-        _takenRecords.value = emptyList()
-        _emergencyContacts.value = emptyList()
-    }
 
     companion object {
         @Volatile
@@ -129,7 +272,8 @@ class MedicationRepository private constructor(context: Context) {
 
     private fun saveMedications(medications: List<Medication>) {
         val medicationsString = medications.joinToString("|") { med ->
-            "${med.id},${med.name},${med.dosage},${med.time},${med.frequency},${med.isMaintenanceMed}"
+            val timesString = med.medicationTimes.joinToString(";")
+            "${med.id},${med.name},${med.dosage},$timesString,${med.frequency},${med.isMaintenanceMed}"
         }
         prefs.edit().putString("medications_data", medicationsString).apply()
     }
@@ -148,16 +292,31 @@ class MedicationRepository private constructor(context: Context) {
             when (parts.size) {
                 5 -> {
                     // Legacy format without maintenance field
-                    Medication(parts[0], parts[1], parts[2], parts[3], parts[4], false)
+                    // Parse times: split by semicolon for multiple times, or use single time
+                    val medicationTimes = if (parts[3].contains(";")) {
+                        parts[3].split(";")
+                    } else {
+                        listOf(parts[3])
+                    }
+                    Medication(parts[0], parts[1], parts[2], medicationTimes, parts[4], false)
                 }
                 6 -> {
                     // New format with maintenance field
+                    val medicationTimes = if (parts[3].contains(";")) {
+                        parts[3].split(";")
+                    } else {
+                        listOf(parts[3])
+                    }
                     val isMaintenanceMed = parts[5].toBooleanStrictOrNull() ?: false
-                    Medication(parts[0], parts[1], parts[2], parts[3], parts[4], isMaintenanceMed)
+                    Medication(parts[0], parts[1], parts[2], medicationTimes, parts[4], isMaintenanceMed)
                 }
                 else -> null
             }
         }
+    }
+
+    private fun parseMedicationsFromJson(data: String): List<Medication> {
+        return parseMedications(data)
     }
 
     private fun saveTakenRecords(takenRecords: List<MedicationTakenRecord>) {
@@ -192,34 +351,6 @@ class MedicationRepository private constructor(context: Context) {
         }
     }
 
-    private fun addSampleMedications() {
-        val sampleMedications = listOf(
-            Medication(
-                id = "sample_1",
-                name = "Biogesic",
-                dosage = "50mg",
-                time = "8:00 AM",
-                frequency = "Daily",
-                isMaintenanceMed = true
-            )
-        )
-
-        _medications.value = sampleMedications
-        saveMedications(sampleMedications)
-
-        // Also add a sample taken record for one medication to show in history
-        val sampleTakenRecord = MedicationTakenRecord(
-            medicationId = "sample_1",
-            takenDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
-            takenTime = "08:05", // Taken at 8:05 AM
-            scheduledTime = "08:00" // Scheduled for 8:00 AM
-        )
-
-        _takenRecords.value = listOf(sampleTakenRecord)
-        saveTakenRecords(listOf(sampleTakenRecord))
-
-        android.util.Log.d("WearMedicationRepo", "Added ${sampleMedications.size} sample medications")
-    }
 
     private fun saveEmergencyContacts(contacts: List<EmergencyContact>) {
         val contactsString = contacts.joinToString("|") { contact ->
@@ -251,20 +382,4 @@ class MedicationRepository private constructor(context: Context) {
         }
     }
 
-    private fun addSampleEmergencyContacts() {
-        val sampleContacts = listOf(
-            EmergencyContact(
-                id = "contact_1",
-                name = "Juan Dela Cruz",
-                relationship = "Father",
-                phoneNumber = "+1-555-0123",
-                isPrimary = true
-            )
-        )
-
-        _emergencyContacts.value = sampleContacts
-        saveEmergencyContacts(sampleContacts)
-
-        android.util.Log.d("WearMedicationRepo", "Added ${sampleContacts.size} sample emergency contacts")
-    }
 }
